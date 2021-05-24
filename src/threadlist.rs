@@ -31,7 +31,7 @@ type Client = std::sync::Arc<tokio::sync::Mutex<crate::Client>>;
 /// # Example
 ///
 /// ```rust,no_run
-/// let list1 = Catalog::new(&mut client, "g")?;
+/// let list1 = Catalog::new(&client, "g")?;
 /// println!("{:?}", resp.threads)
 /// ```
 ///

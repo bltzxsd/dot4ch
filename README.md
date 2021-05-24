@@ -26,7 +26,7 @@ async fn main() {
 
     let post_id = 81743559;
 
-    let thread = Thread::new(&mut client, board, post_id).unwrap();
+    let thread = Thread::new(&client, board, post_id).unwrap();
     
     let post = thread.op();
     println!("{}", post.image_url().unwrap());

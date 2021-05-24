@@ -23,7 +23,7 @@
 //!
 //!     let post_id = 81743559;
 //!
-//!     let thread = Thread::new(&mut client, board, post_id).unwrap();
+//!     let thread = Thread::new(&client, board, post_id).unwrap();
 //!     
 //!     let post = thread.op();
 //!     println!("{}", post.image_url().unwrap());
@@ -143,7 +143,7 @@ pub trait IfModifiedSince {
 /// #[async_trait(?Send)]
 /// impl Update for Something {
 ///     type Output = i32;
-///     async fn update(mut self, client: &mut Client) -> Result<Self::Output>; {
+///     async fn update(mut self, client: &Client) -> Result<Self::Output>; {
 ///         let out = self.stuff + 32;
 ///         Ok(out)
 ///     }
