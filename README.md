@@ -14,6 +14,10 @@ While respecting 4chan's:
 - `If-Modified-Since` headers with update requests.
 - 10 second cooldown with `Thread`, `Catalog` and `Board` update requests.
 
+## THE DOCS
+
+[CLICK HERE](<https://docs.rs/dot4ch/0.1.0/dot4ch/>)
+
 ## Example: Getting an image from the OP of a thread
 
 ```rust
