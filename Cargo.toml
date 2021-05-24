@@ -3,6 +3,9 @@ name = "dot4ch"
 version = "0.1.0"
 authors = ["b1tzxd <nth#8963>"]
 edition = "2018"
+description = "Wrapper library around 4chan API"
+license = "GPL-3.0"
+repository = "https://github.com/bltzxsd/dot4ch"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
