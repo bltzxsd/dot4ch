@@ -9,12 +9,14 @@ This library can fetch and update
 
 While respecting 4chan's:  
     - GET 1 second-per-request cooldown.
+
     - `If-Modified-Since` headers with update requests.
+
     - 10 second cooldown with `Thread`, `Catalog` and `Board` update requests.
 
 ## Example: Getting an image from the OP of a thread
 
- ```rust
+```rust
  #[tokio::main]
 async fn main() {
     let mut client = Client::new();
