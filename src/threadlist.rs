@@ -64,7 +64,7 @@ impl Page {
 #[async_trait(?Send)]
 impl Update for Catalog {
     type Output = Catalog;
-    async fn update(mut self, client: &mut Client) -> crate::Result<Catalog> {
+    async fn update(mut self, client: &Client) -> crate::Result<Catalog> {
         let curr = Utc::now().signed_duration_since(self.last_accessed);
         if curr < Duration::seconds(10) {
             debug!(
@@ -86,7 +86,7 @@ impl Update for Catalog {
             client.lock().await.last_checked = Utc::now();
 
             match response.status() {
-                StatusCode::OK => Catalog::new(client, &self.board).await?,
+                StatusCode::OK => Catalog::new(&client, &self.board).await?,
                 StatusCode::NOT_MODIFIED => {
                     self.last_accessed = Utc::now();
                     self
@@ -107,7 +107,7 @@ impl Update for Catalog {
 #[async_trait(?Send)]
 impl IfModifiedSince for Catalog {
     async fn fetch(
-        client: &&mut std::sync::Arc<tokio::sync::Mutex<crate::Client>>,
+        client: &std::sync::Arc<tokio::sync::Mutex<crate::Client>>,
         url: &str,
         header: &str,
     ) -> Result<Response, reqwest::Error> {
@@ -129,7 +129,7 @@ impl Catalog {
     /// # Error
     ///
     /// This function will return an error if the board isn't valid
-    pub async fn new(client: &mut Client, board: &str) -> crate::Result<Self> {
+    pub async fn new(client: &Client, board: &str) -> crate::Result<Self> {
         let url = format!("https://a.4cdn.org/{}/threads.json", board);
         let threads = client
             .lock()
@@ -168,6 +168,7 @@ impl Catalog {
         self.threads.get(idx)
     }
 
+    /// Get all the pages from the catalog.
     pub fn all_pages(self) -> Vec<Page> {
         self.threads
     }

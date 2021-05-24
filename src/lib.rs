@@ -32,7 +32,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use log::{debug, info, trace};
+use log::{info, trace};
 use reqwest::Response;
 use std::error::Error;
 use std::result;
@@ -91,13 +91,13 @@ impl Client {
         let current_time = Utc::now().signed_duration_since(self.last_checked);
 
         if (current_time < Duration::seconds(1)) && (self.creation_time != self.last_checked) {
-            info!("Requesting responses too fast! Slowing down requests to 1 per second");
+            trace!("Requesting responses too fast! Slowing down requests to 1 per second");
             sleep(TkDuration::from_secs(1)).await;
         }
 
         let resp = self.req_client.get(url).send().await?;
         self.last_checked = Utc::now();
-        debug!(
+        trace!(
             "Updated the client last checked time: {}",
             self.last_checked
         );
@@ -107,7 +107,7 @@ impl Client {
 
 
 /// Returns an If-Modified-Since header to be used in requests.
-pub async fn header(client: &mut Arc<tokio::sync::Mutex<Client>>) -> String {
+pub async fn header(client: &Arc<tokio::sync::Mutex<Client>>) -> String {
     trace!("Sending request with If-Modified-Since header");
     format!(
         "{}",
@@ -123,7 +123,7 @@ pub async fn header(client: &mut Arc<tokio::sync::Mutex<Client>>) -> String {
 #[async_trait(?Send)]
 pub trait IfModifiedSince {
     async fn fetch(
-        client: &&mut Arc<tokio::sync::Mutex<Client>>,
+        client: &Arc<tokio::sync::Mutex<Client>>,
         url: &str,
         header: &str,
     ) -> std::result::Result<Response, reqwest::Error>;
@@ -154,7 +154,7 @@ pub trait Update {
     /// The type of the output
     type Output;
     /// Returns the updated `self` type.
-    async fn update(mut self, client: &mut Arc<tokio::sync::Mutex<Client>>)
+    async fn update(mut self, client: &Arc<tokio::sync::Mutex<Client>>)
         -> Result<Self::Output>;
 }
 

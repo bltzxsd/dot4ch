@@ -8,7 +8,7 @@ use async_trait::async_trait;
 
 use super::{post::Post, Result};
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use log::{debug, trace};
+use log::{debug, info, trace};
 use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -42,7 +42,7 @@ pub struct Thread {
 #[async_trait(?Send)]
 impl IfModifiedSince for Thread {
     async fn fetch(
-        client: &&mut Arc<tokio::sync::Mutex<crate::Client>>,
+        client: &Arc<tokio::sync::Mutex<crate::Client>>,
         url: &str,
         header: &str,
     ) -> std::result::Result<Response, reqwest::Error> {
@@ -64,7 +64,7 @@ impl Update for Thread {
     ///
     /// `update()` respects
     /// 4chan's 10 seconds between each chan thread call.
-    async fn update(mut self, client: &mut Client) -> Result<Thread> {
+    async fn update(mut self, client: &Client) -> Result<Thread> {
         if self.archived {
             let archival_time = self.archive_time.unwrap().format("%a, %d %b %Y %T");
             let formatted = format!(
@@ -79,7 +79,7 @@ impl Update for Thread {
         if self.last_update.is_some() {
             let curr = Utc::now().signed_duration_since(self.last_update.unwrap());
             if curr < Duration::seconds(10) {
-                debug!("Tried updating Thread within 10 seconds. Sleeping until cooldown...");
+                info!("Tried updating Thread within 10 seconds. Sleeping until cooldown...");
                 let dur = Duration::seconds(10).checked_sub(&curr);
                 match dur {
                     // unwrap is fine here since if its < 0, then we already match with None and return Error.
@@ -134,7 +134,7 @@ impl Update for Thread {
                 }
             }
         };
-        let _ = &mut self.update_time();
+        let _ = self.update_time();
         debug!(
             "Changed last updated time to be: {:?}",
             self.last_update.unwrap()
@@ -155,7 +155,7 @@ impl Thread {
     /// # Panics
     ///
     /// This function will panic if it does not find an OP for the thread.
-    pub async fn new(client: &mut Client, board: &str, post_id: u32) -> Result<Thread> {
+    pub async fn new(client: &Client, board: &str, post_id: u32) -> Result<Thread> {
         let thread_data = thread_deserializer(client, board, post_id).await?.posts;
         let op = { thread_data.first().expect("NO OP FOUND").clone() };
         let archived = op.archived();
@@ -254,7 +254,7 @@ struct DeserializedThread {
 ///
 /// Throws an error if the given thread is not found
 async fn thread_deserializer(
-    client: &mut Client,
+    client: &Client,
     board: &str,
     post_num: u32,
 ) -> Result<DeserializedThread> {
