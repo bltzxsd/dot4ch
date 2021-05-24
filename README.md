@@ -2,22 +2,23 @@
 
 dot4ch is a convenient wrapper library around 4chan's API.
 
-This library can fetch and update
-    - Posts
-    - Threads
-    - Catalog
+This library can fetch and update:
 
-While respecting 4chan's:  
-    - GET 1 second-per-request cooldown.
+- Posts
+- Threads
+- Boards
 
-    - `If-Modified-Since` headers with update requests.
+While respecting 4chan's:
 
-    - 10 second cooldown with `Thread`, `Catalog` and `Board` update requests.
+- GET 1 second-per-request cooldown.
+- `If-Modified-Since` headers with update requests.
+- 10 second cooldown with `Thread`, `Catalog` and `Board` update requests.
 
 ## Example: Getting an image from the OP of a thread
 
 ```rust
- #[tokio::main]
+
+#[tokio::main]
 async fn main() {
     let mut client = Client::new();
 
@@ -28,6 +29,7 @@ async fn main() {
     let thread = Thread::new(&mut client, board, post_id).unwrap();
     
     let post = thread.op();
-   println!("{}", post.image_url().unwrap());
+    println!("{}", post.image_url().unwrap());
 }
- ```
+
+```
