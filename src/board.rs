@@ -1,23 +1,44 @@
 //! A cache of the entire board.
 //!
-//! It is recommended to build it once and update only after long intervals.
+//! The `Board` is a comprehensive list of all threads and posts on a board.
 //!
 //! Please rely on updating induidual threads if you do not need *all* posts from a thead.
 //!
-//! This is an expensive and time consuming build for the first time however.
+//! # Time
+//! 
+//! Due to API constraints, the boards is built rather slowly. 
+//! 
+//! It is recommended to update a board in intervals of no less than than 10 minutes.
+//! 
+//! # Example: Building a board and updating it
+//! ```rust
+//! // Building the /g/ board
+//! let board = Board::build(&client, "g")
+//! 
+//! /* Do something with the board */
+//! 
+//! // After a long interval, we update it.
+//! let g = board.update(&client);
+//! println!("{:#?}", g);
+//! ``` 
 
 use crate::{thread::Thread, threadlist::Catalog, Update};
 use async_trait::async_trait;
 use log::info;
-use std::{collections::HashMap, sync::Arc};
 type CrateClient = Arc<tokio::sync::Mutex<crate::Client>>;
-use std::io::{self, Write};
+use std::{
+    collections::HashMap,
+    io::{self, Write},
+    sync::Arc,
+};
 
 #[derive(Debug)]
 /// Holds an abstraction over `HashMap<u32, Thread>` which can be used to any post with a Post number.
 pub struct Board {
+    /// A HashMap of Thread and their ID's
     pub threads: HashMap<u32, Thread>,
-    pub board: String,
+    /// The board on this instance of board is based.
+    board: String,
 }
 
 impl Board {
@@ -30,7 +51,7 @@ impl Board {
     /// A typical board of ~150 threads takes 5+ minutes to cache.
     ///
     /// It is advised to build this only once due to its long wait times caused by API cooldowns.
-    pub async fn build(client: CrateClient, board: &str) -> crate::Result<Self> {
+    pub async fn build(client: &CrateClient, board: &str) -> crate::Result<Self> {
         writeln!(io::stdout(), "Building Board! Please wait.")?;
         let catalog = Catalog::new(&client, board).await?;
         let ids: Vec<_> = catalog
@@ -99,10 +120,15 @@ impl Update for Board {
             .collect();
 
         let mut threads = vec![];
-        for (num, (id ,thread)) in self.threads.into_iter().enumerate() {
+        for (num, (id, thread)) in self.threads.into_iter().enumerate() {
             // update all threads with the ID
             threads.push(thread.update(&client).await?);
-            info!("Updating thread: {}\t Threads updated: {}/{}",id, (num + 1), &ids.len());
+            info!(
+                "Updating thread: {}\t Threads updated: {}/{}",
+                id,
+                (num + 1),
+                &ids.len()
+            );
         }
 
         let mut id_thread_zip = HashMap::new();
