@@ -13,7 +13,6 @@
 //! ```
 
 use std::fmt::{Display, Formatter};
-use super::thread::Thread;
 use crate::default;
 use serde::{Deserialize, Serialize};
 
@@ -233,11 +232,11 @@ impl Post {
     }
 
     /// Returns the 4chan image url from the supplied post.
-    pub fn image_url(&self, thread: Thread) -> Option<String> {
+    pub fn image_url(&self, board: &str) -> Option<String> {
         if !self.filename.is_empty() && !self.ext.is_empty() {
             Some(format!(
                 "https://i.4cdn.org/{}/{}{}",
-                thread.board(),
+                board,
                 &self.tim,
                 &self.ext
             ))
