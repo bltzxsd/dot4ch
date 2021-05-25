@@ -8,10 +8,13 @@ use async_trait::async_trait;
 
 use super::{post::Post, Result};
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use log::{debug, info, trace};
+use log::{debug, info};
 use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::{
+    fmt::{Display, Formatter},
+    sync::Arc,
+};
 use tokio::{sync::Mutex, time};
 
 type Client = Arc<Mutex<crate::Client>>;
@@ -37,6 +40,19 @@ pub struct Thread {
     archived: bool,
     /// Last time the thread was requested.
     last_update: Option<DateTime<Utc>>,
+}
+
+impl Display for Thread {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let fmt = format!(
+            "OP ID: {}\nBoard: /{}/\nNumber of Replies: {}\nArchived: {}\n",
+            self.op.id(),
+            self.board,
+            self.replies_no,
+            self.archived
+        );
+        write!(f, "{}", fmt)
+    }
 }
 
 #[async_trait(?Send)]
@@ -92,7 +108,6 @@ impl Update for Thread {
         // If-Modified-Since: Wed, 21 Oct 2015 07:28:00 GMT
         // strftime fmt:      %a , %d %b  %Y   %T       GMT
         let updated_thread = {
-            trace!("Requesting thread with If-Modifed-Since header");
             let header = crate::header(client).await;
             let response = Thread::fetch(&client, &self.thread_url(), &header).await?;
             client.lock().await.last_checked = Utc::now();
