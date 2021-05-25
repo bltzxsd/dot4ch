@@ -16,7 +16,7 @@ While respecting 4chan's:
 
 ## THE DOCS
 
-[CLICK HERE](<https://docs.rs/dot4ch/0.1.0/dot4ch/>)
+[CLICK HERE](<https://docs.rs/dot4ch/*/dot4ch/>)
 
 ## Example: Getting an image from the OP of a thread
 
@@ -33,7 +33,7 @@ async fn main() {
     let thread = Thread::new(&client, board, post_id).unwrap();
     
     let post = thread.op();
-    println!("{}", post.image_url().unwrap());
+    println!("{}", post.image_url(board).unwrap());
 }
 
 ```
