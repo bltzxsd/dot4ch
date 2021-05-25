@@ -159,3 +159,13 @@ pub trait Update {
 fn default<T: Default>() -> T {
     Default::default()
 }
+
+/*
+/// Returns a vector of all posts that contain the given subject
+pub fn find_subject(&self, subject: &str) -> Vec<&Post> {
+    self.all_replies
+        .iter()
+        .filter(|post| post.subject().contains(subject))
+        .collect::<Vec<_>>()
+}
+*/

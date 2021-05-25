@@ -80,9 +80,8 @@ impl Board {
     }
 
     /// Returns a specific Thread from the Board cache.
-    pub fn get(self, k: u32) -> Option<Thread> {
-        let f = self.threads.get(&k);
-        f.cloned()
+    pub fn get(&self, k: u32) -> Option<&'_ Thread> {
+        self.threads.get(&k)
     }
 
     /// Inserts a new thread into a cache.

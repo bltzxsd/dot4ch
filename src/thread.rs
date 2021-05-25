@@ -1,7 +1,5 @@
 //! Contains information about a 4chan thread.
 //!
-//!
-//!
 
 use crate::{IfModifiedSince, Update};
 use async_trait::async_trait;
@@ -204,14 +202,6 @@ impl Thread {
     /// Returns the first element of
     pub fn find(&self, id: u32) -> Option<&Post> {
         self.all_replies.iter().find(|post| post.id() == id)
-    }
-
-    /// Returns a vector of all posts that contain the given subject
-    pub fn find_subject(&self, subject: &str) -> Vec<&Post> {
-        self.all_replies
-            .iter()
-            .filter(|post| post.subject().contains(subject))
-            .collect::<Vec<_>>()
     }
 
     /// Updates the time when the last GET was performed
