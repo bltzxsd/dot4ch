@@ -6,7 +6,13 @@
 //!
 //! Making an entire `Thread` and searching is preferred since it too uses a single request
 //!
-//! # Example:
+//! ```rust,no_run
+//! let z = Post::default();
+//! println!("{}", z.id());
+//! asserteq!(z.id(), 0);
+//! ```
+
+use std::fmt::{Display, Formatter};
 use super::thread::Thread;
 use crate::default;
 use serde::{Deserialize, Serialize};
@@ -238,5 +244,15 @@ impl Post {
         } else {
             None
         }
+    }
+}
+
+impl Display for Post {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let fmt = format!(
+            "Post ID: {}\n Subject: {}\n Content: {}\n",
+            self.id, self.sub, self.com
+        );
+        write!(f, "{}", fmt)
     }
 }
