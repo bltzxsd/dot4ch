@@ -17,10 +17,11 @@
 
 use crate::{header, IfModifiedSince, Update};
 use async_trait::async_trait;
-use chrono::{DateTime, Duration, Utc};
-use log::{debug, trace};
+use chrono::{DateTime, Duration, NaiveDateTime, Utc};
+use log::debug;
 use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 use tokio::time;
 
 type Client = std::sync::Arc<tokio::sync::Mutex<crate::Client>>;
@@ -44,6 +45,7 @@ pub struct Catalog {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+/// a Page in the catalog.
 pub struct Page {
     /// The page number that the following thread array is on
     page: u8,
@@ -52,23 +54,55 @@ pub struct Page {
 }
 
 impl Page {
+    /// Returns the threads in the catalog.
     pub fn threads(self) -> Vec<CatalogThread> {
         self.threads
     }
 
+    /// Gets the page number of a page.
     pub fn num(self) -> u8 {
         self.page
+    }
+}
+
+impl Display for Catalog {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let fmt = format!(
+            "Board: /{}/\nLast accessed: {}\nPages: {}",
+            self.board,
+            self.last_accessed,
+            self.threads
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<String>()
+        );
+        write!(f, "{}", fmt)
+    }
+}
+
+impl Display for Page {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let fmt = format!(
+            "\nPage Number: {}\nThreads: {}",
+            self.page,
+            self.threads
+                .iter()
+                .map(|thread| thread.to_string())
+                .collect::<String>()
+        );
+        write!(f, "{}", fmt)
     }
 }
 
 #[async_trait(?Send)]
 impl Update for Catalog {
     type Output = Catalog;
+    /// Returns an updated catalog.
     async fn update(mut self, client: &Client) -> crate::Result<Catalog> {
         let curr = Utc::now().signed_duration_since(self.last_accessed);
         if curr < Duration::seconds(10) {
             debug!(
-                "Tried updating Catalog within 10 seconds. Sleeping until cooldown. {}",
+                "Tried updating Catalog within 10 seconds. Sleeping until cooldown: {}",
                 curr
             );
             let dur = Duration::seconds(10).checked_sub(&curr);
@@ -79,7 +113,6 @@ impl Update for Catalog {
         }
 
         let updated_catalog = {
-            trace!("Requesting catalog with If-Modified-Since header");
             let header = header(client).await;
             let get_url = format!("https://a.4cdn.org/{}/threads.json", self.board);
             let response = Catalog::fetch(&client, &get_url, &header).await?;
@@ -147,6 +180,7 @@ impl Catalog {
         })
     }
 
+    /// Updates the last accessed time to be the current time.
     pub fn update_time(mut self) {
         self.last_accessed = Utc::now();
     }
@@ -180,8 +214,8 @@ impl Catalog {
 ///
 /// ```rust,no_run
 /// let resp = reqwest::get("https://a.4cdn.org/g/threads.json").await?.text().await?;
-/// let threadlist: Vec<ThreadList> = serde_json::from_str(&resp)?;
-/// let thread = threadlist[1].thread_id();
+/// let threadlist: Vec<CatalogThread> = serde_json::from_str(&resp)?;
+/// let thread = threadlist[1].id();
 /// println!("{}", thread);
 /// ```
 #[derive(Debug, Serialize, Deserialize)]
@@ -209,5 +243,16 @@ impl CatalogThread {
     /// Returns the number of replies in a thread.
     pub fn replies(&self) -> u32 {
         self.replies
+    }
+}
+
+impl std::fmt::Display for CatalogThread {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let g = NaiveDateTime::from_timestamp(self.last_modified as i64, 0);
+        let fmt = format!(
+            "\n\tThread ID: {} | Last Modified: {} | Number of Replies: {}",
+            self.no, g, self.replies
+        );
+        write!(f, "{}", fmt)
     }
 }
