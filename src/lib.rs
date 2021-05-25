@@ -1,6 +1,6 @@
 //! # dot4ch
 //!
-//!  dot4ch is a convenient wrapper library around 4chan's API.
+//! dot4ch is a convenient wrapper library around 4chan's API.
 //!
 //! This library can fetch and update:
 //! - Posts
@@ -26,17 +26,17 @@
 //!     let thread = Thread::new(&client, board, post_id).unwrap();
 //!     
 //!     let post = thread.op();
-//!     println!("{}", post.image_url().unwrap());
+//!     println!("{}", post.image_url(board).unwrap());
 //! }
 //! ```
+
+#![deny(missing_docs)]
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use log::{info, trace};
 use reqwest::Response;
-use std::error::Error;
-use std::result;
-use std::sync::Arc;
+use std::{error::Error, result, sync::Arc};
 use tokio::{
     sync::Mutex,
     time::{sleep, Duration as TkDuration},
@@ -105,7 +105,6 @@ impl Client {
     }
 }
 
-
 /// Returns an If-Modified-Since header to be used in requests.
 pub async fn header(client: &Arc<tokio::sync::Mutex<Client>>) -> String {
     trace!("Sending request with If-Modified-Since header");
@@ -129,17 +128,16 @@ pub trait IfModifiedSince {
     ) -> std::result::Result<Response, reqwest::Error>;
 }
 
-
-/// Update trait specifies if something can be updated or not. 
-/// 
+/// Update trait specifies if something can be updated or not.
+///
 /// By default, only Threads, Catalogs, and Boards can be updated.
-/// 
-/// # Example 
+///
+/// # Example
 /// ```
-/// use async_trait::async_trait; 
+/// use async_trait::async_trait;
 /// type Client = std::sync:Arc<tokio::sync::Mutex<crate::Client>>;
 /// struct Something { stuff: i32 }
-/// 
+///
 /// #[async_trait(?Send)]
 /// impl Update for Something {
 ///     type Output = i32;
@@ -154,8 +152,7 @@ pub trait Update {
     /// The type of the output
     type Output;
     /// Returns the updated `self` type.
-    async fn update(mut self, client: &Arc<tokio::sync::Mutex<Client>>)
-        -> Result<Self::Output>;
+    async fn update(mut self, client: &Arc<tokio::sync::Mutex<Client>>) -> Result<Self::Output>;
 }
 
 #[doc(hidden)]
