@@ -16,7 +16,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // We will get the specific thread from here: 
     let bpg = 81730319;
-    let thread = &g.get(bpg).unwrap();
+    let thread = &g.get(bpg)?;
     println!("{}", thread);
 
     // After a while has passed we can update the new board.
