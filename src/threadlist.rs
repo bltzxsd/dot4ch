@@ -31,9 +31,13 @@ type Client = std::sync::Arc<tokio::sync::Mutex<crate::Client>>;
 ///
 /// # Example
 ///
-/// ```rust,no_run
-/// let list1 = Catalog::new(&client, "g")?;
-/// println!("{:?}", resp.threads)
+/// ```rust,ignore
+/// use dot4ch::threadlist::Catalog;
+///
+/// let catalog = Catalog::new(&client, "g").await?;
+/// 
+/// // prints the first page
+/// println!("{:?}", catalog.page(1));
 /// ```
 ///
 /// to get all threads from catalog
@@ -44,8 +48,21 @@ pub struct Catalog {
     last_accessed: DateTime<Utc>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-/// a Page in the catalog.
+impl Default for Catalog {
+    fn default() -> Self {
+        Self {
+            board: String::new(),
+            threads: vec![Page::default()],
+            last_accessed: Utc::now(),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Default)]
+/// A Page in the catalog.
+/// Pages contain their own number and a vector or `CatalogThreads`
+///
+/// This is usually the intermediate between a Catalog and a CatalogThread
 pub struct Page {
     /// The page number that the following thread array is on
     page: u8,
@@ -194,8 +211,8 @@ impl Catalog {
     /// - Returns a slice of elements if a range is provided.
     ///
     /// # Example
-    /// ```rust,no_run
-    /// let threadlist: ThreadList = /* your threadlist */;
+    /// ```rust,ignore
+    /// let catalog = Catalog::new(client, "g").await?;
     /// println!("{:?}", thread.get(1..4));
     /// ```
     pub fn page(&self, idx: usize) -> Option<&Page> {
@@ -212,13 +229,17 @@ impl Catalog {
 ///
 /// # Example
 ///
-/// ```rust,no_run
-/// let resp = reqwest::get("https://a.4cdn.org/g/threads.json").await?.text().await?;
-/// let threadlist: Vec<CatalogThread> = serde_json::from_str(&resp)?;
-/// let thread = threadlist[1].id();
-/// println!("{}", thread);
+/// ```rust
+/// use dot4ch::threadlist::Thread;
+///
+/// let thread = CatalogThread::default();
+///
+/// // This prints the empty Catalog thread
+/// let thread_2 = CatalogThread { no: 0, last_modified: 0, replies: 0 };
+/// 
+/// assert_eq!(thread, thread_2);
 /// ```
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct CatalogThread {
     /// The OP ID of a thread
     no: u32,
