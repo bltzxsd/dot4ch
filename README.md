@@ -1,3 +1,4 @@
+[![Rust](https://github.com/bltzxsd/dot4ch/actions/workflows/rust.yml/badge.svg)](https://github.com/bltzxsd/dot4ch/actions/workflows/rust.yml)
 # dot4ch
 
 dot4ch is a convenient wrapper library around 4chan's API.
