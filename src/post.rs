@@ -17,9 +17,9 @@
 //! assert_eq!(z.id(), 0);
 //! ```
 
-use std::fmt::{Display, Formatter};
 use crate::default;
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 /// The Post represents a derserialized post from a thread.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -185,7 +185,7 @@ impl Post {
         self.no
     }
 
-    /// Returns the subject from the text. 
+    /// Returns the subject from the text.
     ///
     /// Returns an empty str if there isnt any.
     pub fn subject(&self) -> &str {
@@ -210,7 +210,7 @@ impl Post {
         &self.filename
     }
 
-    /// Returns the filename's extension if there is a file. 
+    /// Returns the filename's extension if there is a file.
     ///
     /// Returns an empty &str otherwise.
     pub fn ext(&self) -> &str {
