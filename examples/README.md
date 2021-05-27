@@ -19,10 +19,9 @@ While running the examples be sure to set the environment variable `RUST_LOG` to
 Check out the `Cargo.toml` in the examples/*.
 
 The logging crates are optional.
-The `tokio` crate only requires the features:
+The `tokio` crate only requires this feature in a binary/build:
 
 - `rt-multi-thread`
-- `macros`
 
 ## Questions
 
