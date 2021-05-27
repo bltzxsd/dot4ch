@@ -44,7 +44,7 @@ pub struct Post {
     now: String,
 
     /// UNIX timestamp the post was created
-    time: u64,
+    time: i64,
 
     /// Name user posted with. Defaults to `Anonymous`
     #[serde(default = "default::<String>")]
