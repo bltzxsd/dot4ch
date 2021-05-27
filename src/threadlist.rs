@@ -231,6 +231,7 @@ impl Catalog {
 ///
 /// ```rust
 /// use dot4ch::threadlist::Thread;
+/// use dot4ch::threadlist::CatalogThread;
 ///
 /// let thread = CatalogThread::default();
 ///

@@ -14,7 +14,7 @@
 //!
 //! ## Example: Getting an image from the OP of a thread
 //!
-//! ```rust
+//! ```rust,ignore
 //! #[tokio::main]
 //! async fn main() {
 //!     let mut client = Client::new();
@@ -135,13 +135,15 @@ pub trait IfModifiedSince {
 /// # Example
 /// ```
 /// use async_trait::async_trait;
-/// type Client = std::sync::Arc<tokio::sync::Mutex<crate::Client>>;
+/// use dot4ch::Client;
+///
+/// type Client = std::sync::Arc<tokio::sync::Mutex<Client>>;
 /// struct Something { stuff: i32 }
 ///
 /// #[async_trait(?Send)]
 /// impl Update for Something {
 ///     type Output = i32;
-///     async fn update(mut self, client: &Client) -> Result<Self::Output>; {
+///     async fn update(mut self, client: &Client) -> Result<Self::Output> {
 ///         let out = self.stuff + 32;
 ///         Ok(out)
 ///     }
