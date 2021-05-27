@@ -245,9 +245,7 @@ impl Post {
         if !self.filename.is_empty() && !self.ext.is_empty() {
             Some(format!(
                 "https://i.4cdn.org/{}/{}{}",
-                board,
-                &self.tim,
-                &self.ext
+                board, &self.tim, &self.ext
             ))
         } else {
             None
