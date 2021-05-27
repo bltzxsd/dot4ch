@@ -6,14 +6,14 @@ edition = "2018"
 description = "Wrapper library around 4chan API"
 license = "GPL-3.0"
 repository = "https://github.com/bltzxsd/dot4ch"
-keywords = ["4chan" , "api", "rust"]
+keywords = ["4chan" , "api", "library", "wrapper"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 
 reqwest = { version = "0.11.3", features = ["json"] }
-tokio = { version = "1.6.0", features = ["time", "macros", "sync"]}
+tokio = { version = "1.6.0", features = ["time", "sync"]}
 chrono = "0.4.19"
 serde = { version = "1.0.126", features = ["derive"]}
 log = "0.4.14"
