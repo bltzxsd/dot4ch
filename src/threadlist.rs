@@ -229,7 +229,7 @@ impl Catalog {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use dot4ch::threadlist::CatalogThread;
 ///
 /// let thread = CatalogThread::default();
