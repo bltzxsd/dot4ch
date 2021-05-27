@@ -5,23 +5,23 @@
 //! Please rely on updating induidual threads if you do not need *all* posts from a thead.
 //!
 //! # Time
-//! 
-//! Due to API constraints, the boards is built rather slowly. 
-//! 
+//!
+//! Due to API constraints, a board is built rather slowly.
+//!
 //! It is recommended to update a board in intervals of no less than than 10 minutes.
-//! 
+//!
 //! # Example: Building a board and updating it
 //! ```rust,ignore
 //! use dot4ch::{Client, Update, board::Board}
 //! // Building the /g/ board
 //! let board = Board::build(&client, "g").await.unwrap();
-//! 
+//!
 //! /* Do something with the board */
-//! 
+//!
 //! // After a long interval, we update it.
 //! let g = board.update(&client);
 //! println!("{:#?}", g);
-//! ``` 
+//! ```
 
 use crate::{thread::Thread, threadlist::Catalog, Update};
 use async_trait::async_trait;
