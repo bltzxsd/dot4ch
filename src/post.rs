@@ -251,6 +251,91 @@ impl Post {
             None
         }
     }
+
+    /// Returns a UNIX Timestamp of when the post was created
+    pub fn post_time(&self) -> i64 {
+        self.time
+    }
+
+    /// Returns a true if the thread is pinned
+    pub fn sticky(&self) -> bool {
+        if self.sticky != 0 {
+            return true;
+        }
+        false
+    }
+
+    /// Returns true if the thread is closed to replies
+    pub fn closed(&self) -> bool {
+        if self.closed != 0 {
+            return true;
+        }
+        false
+    }
+
+    /// Returns the tripcode if the poster has one. Returns `None` otherwise.
+    pub fn tripcode(&self) -> Option<&str> {
+        if self.trip.is_empty() {
+            return None;
+        }
+        Some(&self.trip)
+    }
+
+    /// Returns the capcode identifier for a post if there is one. `None` otherwise.
+    pub fn capcode(&self) -> Option<&str> {
+        if self.capcode.is_empty() {
+            return None;
+        }
+        Some(&self.capcode)
+    }
+
+    /// Returns the poster's country name if there is one avaliable. `None` otherwise.
+    pub fn country(&self) -> Option<&str> {
+        if self.country_name.is_empty() {
+            return None;
+        }
+        Some(&self.country_name)
+    }
+
+    /// Returns the post's file's MD5 hash if there is one.
+    pub fn md5hash(&self) -> Option<&str> {
+        if self.md5.is_empty() {
+            return None;
+        }
+        Some(&self.md5)
+    }
+
+    /// Returns true if the file in the post was deleted.
+    pub fn file_deleted(&self) -> bool {
+        if self.filedeleted != 0 {
+            return true;
+        }
+        false
+    }
+
+    /// Returns a filesize of a post if it has one.
+    pub fn filesize(&self) -> Option<u32> {
+        if self.fsize != 0 {
+            return Some(self.fsize);
+        }
+        None
+    }
+
+    /// Returns true if the thread has reached image limit, false otherwise
+    pub fn image_limit(&self) -> bool {
+        if self.imagelimit != 0 {
+            return true;
+        }
+        false
+    }
+
+    /// Returns true if the thread has reached bump limit, false otherwise
+    pub fn bump_limit(&self) -> bool {
+        if self.bumplimit != 0 {
+            return true;
+        }
+        false
+    }
 }
 
 impl Display for Post {
