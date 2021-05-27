@@ -135,9 +135,9 @@ pub trait IfModifiedSince {
 /// # Example
 /// ```
 /// use async_trait::async_trait;
-/// use dot4ch::Client;
+/// use dot4ch::Update;
 ///
-/// type Client = std::sync::Arc<tokio::sync::Mutex<Client>>;
+/// type Client = std::sync::Arc<tokio::sync::Mutex<dot4ch::Client>>;
 /// struct Something { stuff: i32 }
 ///
 /// #[async_trait(?Send)]
