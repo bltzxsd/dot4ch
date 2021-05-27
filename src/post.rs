@@ -2,14 +2,19 @@
 //!
 //! Some of the fields here are optional
 //!
-//! Posts are usually used in `Thread`s which is why they do not have a `new()`.
+//! Posts are usually used in `Thread`s which is why they do not have a `new()` but they do have an `Default` implementation.
 //!
-//! Making an entire `Thread` and searching is preferred since it too uses a single request
+//! ## 4chan API:
+//! /[board]/thread/[op ID].json files are a representation of a single OP and all the replies, which form a thread.
 //!
-//! ```rust,no_run
+//! ```rust
+//! use dot4cha::post::Post;
+//!
 //! let z = Post::default();
+//!
 //! println!("{}", z.id());
-//! asserteq!(z.id(), 0);
+//!
+//! assert_eq!(z.id(), 0);
 //! ```
 
 use std::fmt::{Display, Formatter};
