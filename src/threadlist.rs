@@ -240,7 +240,7 @@ impl Catalog {
 ///
 /// assert_eq!(thread, thread_2);
 /// ```
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct CatalogThread {
     /// The OP ID of a thread
     no: u32,
