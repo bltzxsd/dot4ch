@@ -136,6 +136,7 @@ pub trait IfModifiedSince {
 /// ```
 /// use async_trait::async_trait;
 /// use dot4ch::Update;
+/// type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 ///
 /// type Client = std::sync::Arc<tokio::sync::Mutex<dot4ch::Client>>;
 /// struct Something { stuff: i32 }
