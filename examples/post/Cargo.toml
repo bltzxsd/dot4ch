@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "1.6.0", features = ["macros", "rt-multi-thread"]}
-dot4ch = "1.0.0"
+dot4ch = "1.1.0"
 
 ## Optional Dependencies 
 
