@@ -35,7 +35,7 @@ type Client = std::sync::Arc<tokio::sync::Mutex<crate::Client>>;
 /// use dot4ch::threadlist::Catalog;
 ///
 /// let catalog = Catalog::new(&client, "g").await?;
-/// 
+///
 /// // prints the first page
 /// println!("{:?}", catalog.page(1));
 /// ```
@@ -236,7 +236,7 @@ impl Catalog {
 ///
 /// // This prints the empty Catalog thread
 /// let thread_2 = CatalogThread { no: 0, last_modified: 0, replies: 0 };
-/// 
+///
 /// assert_eq!(thread, thread_2);
 /// ```
 #[derive(Debug, Serialize, Deserialize, Default)]
