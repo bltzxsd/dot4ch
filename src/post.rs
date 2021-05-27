@@ -180,17 +180,19 @@ pub struct Post {
 }
 
 impl Post {
-    /// Gets the post number of a Post
+    /// Returns the post number of a Post
     pub fn id(&self) -> u32 {
         self.no
     }
 
-    /// Get the subject from the text
+    /// Returns the subject from the text. 
+    ///
+    /// Returns an empty str if there isnt any.
     pub fn subject(&self) -> &str {
         &self.sub
     }
 
-    /// Gets the time from Post
+    /// Returns the time from Post
     ///
     /// format:
     /// MM/DD/YY(Day)HH:MM (:SS on some boards), EST/EDT timezone
@@ -198,27 +200,29 @@ impl Post {
         &self.now
     }
 
-    /// Gets the comment from the Post
+    /// Returns the comment from the Post
     pub fn content(&self) -> &str {
         &self.com
     }
 
-    /// Gets the filename
+    /// Returns the filename if there is one or an empty string otherwise.
     pub fn filename(&self) -> &str {
         &self.filename
     }
 
-    /// Gets the filename's extension
+    /// Returns the filename's extension if there is a file. 
+    ///
+    /// Returns an empty &str otherwise.
     pub fn ext(&self) -> &str {
         &self.ext
     }
 
-    /// Gets the number of replies to the Post
+    /// Returns the number of replies to the Post
     pub fn replies(&self) -> u32 {
         self.replies
     }
 
-    /// Check if the OP Post is archived.
+    /// Returns true if the post is archived. False othwrwise.
     pub fn archived(&self) -> bool {
         if self.archived == 1 {
             return true;
