@@ -21,7 +21,8 @@ Check out the `Cargo.toml` in the examples/*.
 The logging crates are optional.
 The `tokio` crate only requires this feature in a binary/build:
 
-- `rt-multi-thread`
+- `rt-multi-thread` 
+- `macros`
 
 ## Questions
 
