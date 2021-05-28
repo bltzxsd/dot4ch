@@ -15,26 +15,11 @@ While respecting 4chan's:
 - `If-Modified-Since` headers with update requests.
 - 10 second cooldown with `Thread`, `Catalog` and `Board` update requests.
 
-## THE DOCS
+## Getting Started
 
-[CLICK HERE](<https://docs.rs/dot4ch/*/dot4ch/>)
+**[THE DOCS](<https://docs.rs/dot4ch/*/dot4ch/>)**
 
-## Example: Getting an image from the OP of a thread
-
-```rust
-
-#[tokio::main]
-async fn main() {
-    let mut client = Client::new();
-
-    let board = "g";
-
-    let post_id = 81743559;
-
-    let thread = Thread::new(&client, board, post_id).await.unwrap();
-    
-    let post = thread.op();
-    println!("{}", post.image_url(board).unwrap());
-}
+There are plenlty of examples in the [examples directory](<https://github.com/bltzxsd/dot4ch/tree/master/examples>) to get you 
+started plus the I believe everything in the crate in documented.
 
 ```
