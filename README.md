@@ -20,6 +20,6 @@ While respecting 4chan's:
 **[THE DOCS](<https://docs.rs/dot4ch/*/dot4ch/>)**
 
 There are plenlty of examples in the [examples directory](<https://github.com/bltzxsd/dot4ch/tree/master/examples>) to get you 
-started plus the I believe everything in the crate in documented.
+started plus the I believe everything in the crate is documented.
 
 ```
