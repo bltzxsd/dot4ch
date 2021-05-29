@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sample_thread = Thread::new(&client, board, post).await?;
 
     // We can find any post in this thread by its id
-    println!("{}", sample_thread.find(81730461_u32).unwrap());
+    println!("{}", sample_thread.find(81730461_u32).expect("Could not find a post by that ID"));
 
     // Get the thread URL 
     println!("{}", sample_thread.thread_url());
