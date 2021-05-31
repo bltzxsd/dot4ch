@@ -1,5 +1,6 @@
-[![Rust](https://github.com/bltzxsd/dot4ch/actions/workflows/rust.yml/badge.svg)](https://github.com/bltzxsd/dot4ch/actions/workflows/rust.yml)
 # dot4ch
+
+[![Rust](https://github.com/bltzxsd/dot4ch/actions/workflows/rust.yml/badge.svg)](https://github.com/bltzxsd/dot4ch/actions/workflows/rust.yml)
 
 dot4ch is a convenient wrapper library around 4chan's API.
 
@@ -19,5 +20,11 @@ While respecting 4chan's:
 
 **[THE DOCS](<https://docs.rs/dot4ch/*/dot4ch/>)**
 
-There are plenlty of examples in the [examples directory](<https://github.com/bltzxsd/dot4ch/tree/master/examples>) to get you 
+There are plenlty of examples in the [examples directory](<https://github.com/bltzxsd/dot4ch/tree/master/examples>) to get you
 started plus the I believe everything in the crate is documented.
+
+You can run any example with
+
+```shell
+cargo run --example <example name>
+```
