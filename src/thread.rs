@@ -151,7 +151,7 @@ impl Update for Thread {
         let _ = self.update_time();
         debug!(
             "Changed last updated time to be: {:?}",
-            // This should never fail. 
+            // This should never fail.
             self.last_update.expect("last update debug log failed")
         );
 
