@@ -30,7 +30,51 @@
 //! }
 //! ```
 
-#![deny(missing_docs)]
+#![deny(
+    anonymous_parameters,
+    clippy::all,
+    const_err,
+    illegal_floating_point_literal_pattern,
+    late_bound_lifetime_arguments,
+    path_statements,
+    patterns_in_fns_without_body,
+    rust_2018_idioms,
+    trivial_casts,
+    trivial_numeric_casts,
+    unreachable_pub,
+    unsafe_code,
+    unused_extern_crates
+)]
+#![warn(
+    clippy::dbg_macro,
+    clippy::decimal_literal_representation,
+    clippy::get_unwrap,
+    clippy::missing_docs_in_private_items,
+    clippy::pedantic,
+    clippy::print_stdout,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::unwrap_used,
+    clippy::use_debug,
+    missing_copy_implementations,
+    missing_debug_implementations,
+    unused_qualifications,
+    variant_size_differences
+)]
+#![allow(
+    clippy::cast_lossless,
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    clippy::cast_precision_loss,
+    clippy::cast_sign_loss,
+    clippy::enum_glob_use,
+    clippy::map_err_ignore,
+    clippy::missing_errors_doc,
+    clippy::must_use_candidate,
+    clippy::redundant_pub_crate,
+    clippy::wildcard_imports,
+    clippy::missing_const_for_fn
+)]
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
@@ -47,6 +91,7 @@ pub mod post;
 pub mod thread;
 pub mod threadlist;
 
+/// Crate result type
 pub(crate) type Result<T> = result::Result<T, Box<dyn Error>>;
 
 /// The main client for accessing API.
@@ -82,11 +127,16 @@ impl Client {
     pub fn req_client(&self) -> &reqwest::Client {
         &self.req_client
     }
+
     /// Constructs and sends a GET Request to the given 4chan URL.
     ///
     /// Respects the 4chan 1 request-per-second guideline.
     ///
     /// Returns a `Response` from the given 4chan url
+    ///
+    /// # Errors
+    ///
+    ///  This function will return an error if the `GET` request to the URL fails.
     pub async fn get(&mut self, url: &str) -> Result<Response> {
         let current_time = Utc::now().signed_duration_since(self.last_checked);
 
@@ -105,7 +155,9 @@ impl Client {
     }
 }
 
+/// Type alias for an client in an Arc<Mutex<Client>>
 type Dot4chClient = Arc<Mutex<Client>>;
+
 /// Returns an If-Modified-Since header to be used in requests.
 pub async fn header(client: &Dot4chClient) -> String {
     trace!("Sending request with If-Modified-Since header");
@@ -158,7 +210,7 @@ pub trait Update {
     /// The type of the output
     type Output;
     /// Returns the updated `self` type.
-    async fn update(mut self, client: &Arc<tokio::sync::Mutex<Client>>) -> Result<Self::Output>;
+    async fn update(mut self, client: &Dot4chClient) -> Result<Self::Output>;
 }
 
 #[doc(hidden)]
