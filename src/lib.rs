@@ -162,11 +162,18 @@ pub trait Update {
 }
 
 #[doc(hidden)]
+/// Returns the default of a type.
+///
+/// Used interally to generate missing fields for Post struct
 fn default<T: Default>() -> T {
     Default::default()
 }
 
 /*
+TODO: This function should have been implemented for (maybe something like a)
+Board, or any collection
+of threads, maybe turn this into trait?
+
 /// Returns a vector of all posts that contain the given subject
 pub fn find_subject(&self, subject: &str) -> Vec<&Post> {
     self.all_replies
@@ -174,4 +181,5 @@ pub fn find_subject(&self, subject: &str) -> Vec<&Post> {
         .filter(|post| post.subject().contains(subject))
         .collect::<Vec<_>>()
 }
+
 */
