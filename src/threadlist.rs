@@ -122,13 +122,7 @@ impl Update for Catalog {
             );
             let dur = Duration::seconds(10).checked_sub(&curr);
             match dur {
-                Some(time) => {
-                    time::sleep(
-                        time.to_std()
-                            .expect("Could not convert time to Std format."),
-                    )
-                    .await
-                }
+                Some(time) => time::sleep(time.to_std()?).await,
                 None => return Err(From::from("Could not subtract time in Catalog")),
             }
         }
