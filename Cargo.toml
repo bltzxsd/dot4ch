@@ -13,8 +13,15 @@ keywords = ["4chan" , "api", "library", "wrapper"]
 [dependencies]
 
 reqwest = { version = "0.11.3", features = ["json"] }
-tokio = { version = "1.6.0", features = ["time", "sync"]}
+tokio = { version = "1.6.0", features = ["time", "sync", "rt-multi-thread", "macros"] }
 chrono = "0.4.19"
 serde = { version = "1.0.126", features = ["derive"]}
 log = "0.4.14"
 async-trait = "0.1.50"
+
+[dev-dependencies]
+simple_logger = "1.11.0"
+
+[workspace] 
+members = ["examples"]
+
