@@ -26,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // You will notice that we have to send the corrent board, since posts do not store the which board they are on which is needed to complete the urls.
     // I recommend you store the board you are accessing as a variable.
     let image_url = post.image_url("g");
-                    //   ^^^^^^^^^^^^^^
+    //   ^^^^^^^^^^^^^^
     // Not all posts have images, and our default implementation of a post certainly doesn't. So this will result an None.
     assert!(image_url.is_none());
 

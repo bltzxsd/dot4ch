@@ -1,7 +1,6 @@
 use dot4ch::{threadlist::Catalog, Client, Update};
 use simple_logger::SimpleLogger;
 
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // setting up logging.
