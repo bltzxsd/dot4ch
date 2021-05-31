@@ -21,5 +21,3 @@ While respecting 4chan's:
 
 There are plenlty of examples in the [examples directory](<https://github.com/bltzxsd/dot4ch/tree/master/examples>) to get you 
 started plus the I believe everything in the crate is documented.
-
-```
