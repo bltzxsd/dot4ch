@@ -105,8 +105,9 @@ impl Client {
     }
 }
 
+type Dot4chClient = Arc<Mutex<Client>>;
 /// Returns an If-Modified-Since header to be used in requests.
-pub async fn header(client: &Arc<tokio::sync::Mutex<Client>>) -> String {
+pub async fn header(client: &Dot4chClient) -> String {
     trace!("Sending request with If-Modified-Since header");
     format!(
         "{}",
@@ -120,9 +121,11 @@ pub async fn header(client: &Arc<tokio::sync::Mutex<Client>>) -> String {
 
 #[doc(hidden)]
 #[async_trait(?Send)]
+/// Helper trait that sends a GET request from the reqwest client
+/// with a If-Modified-Since header.
 pub trait IfModifiedSince {
     async fn fetch(
-        client: &Arc<tokio::sync::Mutex<Client>>,
+        client: &Dot4chClient,
         url: &str,
         header: &str,
     ) -> std::result::Result<Response, reqwest::Error>;
