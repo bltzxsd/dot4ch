@@ -23,10 +23,13 @@
 //! println!("{:#?}", g);
 //! ```
 
-use crate::{thread::Thread, threadlist::Catalog, Update};
+use crate::{thread::Thread, threadlist::Catalog, Dot4chClient, Update};
 use async_trait::async_trait;
 use log::info;
+
+/// Type alias for not wrting Arc<Mute<Client>>
 type CrateClient = Arc<tokio::sync::Mutex<crate::Client>>;
+
 use std::{
     collections::HashMap,
     io::{self, Write},
@@ -52,20 +55,24 @@ impl Board {
     /// A typical board of ~150 threads takes 5+ minutes to cache.
     ///
     /// It is advised to build this only once due to its long wait times caused by API cooldowns.
-    pub async fn build(client: &CrateClient, board: &str) -> crate::Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if request to get a new `Catalog` fails.
+    pub async fn build(client: &Dot4chClient, board: &str) -> crate::Result<Self> {
         writeln!(io::stdout(), "Building Board! Please wait.")?;
-        let catalog = Catalog::new(&client, board).await?;
+        let catalog = Catalog::new(client, board).await?;
         let ids: Vec<_> = catalog
             .all_pages()
             .into_iter()
-            .flat_map(|f| f.threads())
+            .flat_map(crate::threadlist::Page::threads)
             .map(|thread| thread.id())
             .collect();
 
         info!("Number of threads: {}", ids.len());
         let mut threads = vec![];
         for (idx, id) in ids.iter().enumerate() {
-            threads.push(Thread::new(&client, board, *id).await?);
+            threads.push(Thread::new(client, board, *id).await?);
             info!("Pushed Thread: {}/{}", idx + 1, ids.len())
         }
 
@@ -101,7 +108,7 @@ impl Board {
 
 #[async_trait(?Send)]
 impl Update for Board {
-    type Output = Board;
+    type Output = Self;
     /// Returns an updated board.
     ///
     /// It is recommended to call this infrequently due to API calls having cooldowns.
@@ -111,18 +118,18 @@ impl Update for Board {
         // get the ID's of all the threads we need
         // we have to call this again because there might be new thread that need to be added.
         writeln!(io::stdout(), "Updating Board. Please wait..")?;
-        let catalog = Catalog::new(&client, &self.board).await?;
+        let catalog = Catalog::new(client, &self.board).await?;
         let ids: Vec<_> = catalog
             .all_pages()
             .into_iter()
-            .flat_map(|f| f.threads())
+            .flat_map(crate::threadlist::Page::threads)
             .map(|thread| thread.id())
             .collect();
 
         let mut threads = vec![];
         for (num, (id, thread)) in self.threads.into_iter().enumerate() {
             // update all threads with the ID
-            threads.push(thread.update(&client).await?);
+            threads.push(thread.update(client).await?);
             info!(
                 "Updating thread: {}\t Threads updated: {}/{}",
                 id,
