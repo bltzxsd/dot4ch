@@ -12,16 +12,16 @@ and for posting the logs, I use [Simple Logger](<https://github.com/borntyping/r
 
 But anything else you may want to use is fine too.
 
-While running the examples be sure to set the environment variable `RUST_LOG` to something, such as `INFO` or `DEBUG` to see the logs. 
+While running the examples be sure to set the environment variable `RUST_LOG` to something, such as `INFO` or `DEBUG` to see the logs.
 
 ## Dependencies
 
-Check out the `Cargo.toml` in the examples/*.
+Check out the `Cargo.toml` above.
 
 The logging crates are optional.
 The `tokio` crate only requires this feature in a binary/build:
 
-- `rt-multi-thread` 
+- `rt-multi-thread`
 - `macros`
 
 ## Questions

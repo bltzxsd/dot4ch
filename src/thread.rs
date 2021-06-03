@@ -1,7 +1,7 @@
 //! Contains information about a 4chan thread.
 //!
 
-use crate::{IfModifiedSince, Update};
+use crate::{Dot4chClient, IfModifiedSince, Update};
 use async_trait::async_trait;
 
 use super::{post::Post, Result};
@@ -9,13 +9,8 @@ use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use log::{debug, info};
 use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt::{Display, Formatter},
-    sync::Arc,
-};
-use tokio::{sync::Mutex, time};
-
-type Client = Arc<Mutex<crate::Client>>;
+use std::fmt::{Display, Formatter};
+use tokio::time;
 
 /// The main end user interface to the 4chan thread API.
 ///
@@ -56,7 +51,7 @@ impl Display for Thread {
 #[async_trait(?Send)]
 impl IfModifiedSince for Thread {
     async fn fetch(
-        client: &Arc<tokio::sync::Mutex<crate::Client>>,
+        client: &Dot4chClient,
         url: &str,
         header: &str,
     ) -> std::result::Result<Response, reqwest::Error> {
@@ -73,14 +68,17 @@ impl IfModifiedSince for Thread {
 
 #[async_trait(?Send)]
 impl Update for Thread {
-    type Output = Thread;
+    type Output = Self;
     /// Returns the updated 4chan thread.
     ///
     /// `update()` respects
     /// 4chan's 10 seconds between each chan thread call.
-    async fn update(mut self, client: &Client) -> Result<Thread> {
+    async fn update(mut self, client: &Dot4chClient) -> Result<Self> {
         if self.archived {
-            let archival_time = self.archive_time.unwrap().format("%a, %d %b %Y %T");
+            let archival_time = match self.archive_time {
+                Some(time) => time.format("%a, %d %b %Y %T"),
+                None => return Err(From::from("Archival time was not found on thread.")),
+            };
             let formatted = format!(
                 "Thread: [{}] got archived at: {}",
                 self.op().id(),
@@ -90,14 +88,14 @@ impl Update for Thread {
         }
 
         // Fetch requests staggered every 10 seconds
-        if self.last_update.is_some() {
-            let curr = Utc::now().signed_duration_since(self.last_update.unwrap());
+        if let Some(time) = self.last_update {
+            let curr = Utc::now().signed_duration_since(time);
             if curr < Duration::seconds(10) {
                 info!("Tried updating Thread within 10 seconds. Sleeping until cooldown...");
                 let dur = Duration::seconds(10).checked_sub(&curr);
                 match dur {
                     // unwrap is fine here since if its < 0, then we already match with None and return Error.
-                    Some(time) => time::sleep(time.to_std().unwrap()).await,
+                    Some(time) => time::sleep(time.to_std().expect("value could not fit")).await,
                     None => return Err(From::from("Could not subtract time in Thread")),
                 }
             }
@@ -107,38 +105,41 @@ impl Update for Thread {
         // strftime fmt:      %a , %d %b  %Y   %T       GMT
         let updated_thread = {
             let header = crate::header(client).await;
-            let response = Thread::fetch(&client, &self.thread_url(), &header).await?;
+            let response = Self::fetch(client, &self.thread_url(), &header).await?;
             client.lock().await.last_checked = Utc::now();
 
             match response.status() {
                 StatusCode::OK => {
                     let thread_data = response.json::<DeserializedThread>().await?.posts;
-                    let archive_time = if thread_data.first().unwrap().archived() {
-                        let timestamp = thread_data.first().unwrap().archived_on();
-                        let naive = NaiveDateTime::from_timestamp(timestamp, 0);
-                        Some(naive)
-                    } else {
-                        None
-                    };
-                    let last_reply = if thread_data.last().is_some() {
-                        Some(thread_data.last().unwrap().id())
-                    } else {
-                        None
+
+                    let archive_time = thread_data.first().and_then(|data| {
+                        if data.archived() {
+                            Some(NaiveDateTime::from_timestamp(data.archived_on(), 0))
+                        } else {
+                            None
+                        }
+                    });
+
+                    let last_reply = thread_data.last().map(Post::id);
+                    let archived = match thread_data.first() {
+                        Some(boolean) => boolean.archived(),
+                        None => return Err(From::from("First post was not found.")),
                     };
 
-                    Thread {
+                    Self {
                         op: thread_data.first().expect("NO OP FOUND").clone(),
                         board: self.board().to_string(),
                         replies_no: thread_data.len() - 1_usize,
                         last_reply,
                         all_replies: thread_data.iter().skip(1).cloned().collect(),
                         archive_time,
-                        archived: thread_data.first().unwrap().archived(),
+                        archived,
                         last_update: None,
                     }
                 }
 
                 StatusCode::NOT_MODIFIED => self.clone(),
+
                 unexpected_resp => {
                     return Err(From::from(format!(
                         "Got unexpected StatusCode {} from Thread::update()",
@@ -150,7 +151,8 @@ impl Update for Thread {
         let _ = self.update_time();
         debug!(
             "Changed last updated time to be: {:?}",
-            self.last_update.unwrap()
+            // This should never fail.
+            self.last_update.expect("last update debug log failed")
         );
 
         client.lock().await.last_checked = Utc::now();
@@ -165,27 +167,23 @@ impl Thread {
     /// **Requires the Board to be a valid 4chan board
     /// and the Post ID to be a valid 4chan OP Post ID.**
     ///
-    /// # Panics
+    /// # Errors
     ///
     /// This function will panic if it does not find an OP for the thread.
-    pub async fn new(client: &Client, board: &str, post_id: u32) -> Result<Thread> {
+    pub async fn new(client: &Dot4chClient, board: &str, post_id: u32) -> Result<Self> {
         let thread_data = thread_deserializer(client, board, post_id).await?.posts;
         let op = { thread_data.first().expect("NO OP FOUND").clone() };
         let archived = op.archived();
         let archive_time = if archived {
-            let timestamp = thread_data.first().unwrap().archived_on();
+            let timestamp = thread_data.first().expect("First not found.").archived_on();
             let naive = NaiveDateTime::from_timestamp(timestamp, 0);
             Some(naive)
         } else {
             None
         };
-        let last_reply = if thread_data.last().is_some() {
-            Some(thread_data.last().unwrap().id())
-        } else {
-            None
-        };
+        let last_reply = thread_data.last().map(Post::id);
 
-        Ok(Thread {
+        Ok(Self {
             op,
             board: board.to_string(),
             replies_no: thread_data.len() - 1_usize,
@@ -248,6 +246,7 @@ impl Thread {
 ///
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 struct DeserializedThread {
+    /// A vector of posts. Used internally.
     posts: Vec<Post>,
 }
 
@@ -259,7 +258,7 @@ struct DeserializedThread {
 ///
 /// Throws an error if the given thread is not found
 async fn thread_deserializer(
-    client: &Client,
+    client: &Dot4chClient,
     board: &str,
     post_num: u32,
 ) -> Result<DeserializedThread> {

@@ -1,12 +1,12 @@
+use dot4ch::{board::Board, Client, Update};
 use simple_logger::SimpleLogger;
-use dot4ch::{Update, board::Board, Client};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // setting up logging.
     SimpleLogger::new().init()?;
 
-    // We first make a client: 
+    // We first make a client:
     let client = Client::new();
 
     // Then we build our board.
@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Building a board does take quite a bit of time.
     let g = Board::build(&client, "g").await?;
 
-    // We will get the specific thread from here: 
+    // We will get the specific thread from here:
     let bpg = 81730319;
     let thread = &g.get(bpg).expect("No thread by that number was found!");
     println!("{}", thread);
