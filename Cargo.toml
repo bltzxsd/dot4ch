@@ -1,6 +1,6 @@
 [package]
 name = "dot4ch"
-version = "1.1.1"
+version = "1.2.0"
 authors = ["b1tzxd <nth#8963>"]
 edition = "2018"
 description = "Wrapper library around 4chan API"
@@ -13,7 +13,7 @@ keywords = ["4chan" , "api", "library", "wrapper"]
 [dependencies]
 
 reqwest = { version = "0.11.3", features = ["json"] }
-tokio = { version = "1.6.0", features = ["time", "sync", "rt-multi-thread", "macros"] }
+tokio = { version = "1.6.1", features = ["time", "sync", "rt-multi-thread", "macros"] }
 chrono = "0.4.19"
 serde = { version = "1.0.126", features = ["derive"]}
 log = "0.4.14"
