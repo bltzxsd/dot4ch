@@ -7,27 +7,23 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1.6.0", features = ["rt-multi-thread", "macros"]}
-dot4ch = "1.1.0"
-
-## Optional Dependencies 
-
-# This is just for seeing the logs, you may remove it if you wish.
+tokio = { version = "1.6.0", features = ["rt-multi-thread", "macros"] }
+dot4ch = { path = "../" }
 simple_logger = "1.11.0" 
 
 
 [[example]]
 name = "board"
-path = "board.rs"
+path = "eg_board.rs"
 
 [[example]]
 name = "catalog"
-path = "catalog.rs"
+path = "eg_catalog.rs"
 
 [[example]]
 name = "post"
-path = "post.rs"
+path = "eg_post.rs"
 
 [[example]]
 name = "thread"
-path = "thread.rs"
+path = "eg_thread.rs"
