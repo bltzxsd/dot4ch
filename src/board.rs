@@ -11,15 +11,19 @@
 //! It is recommended to update a board in intervals of no less than than 10 minutes.
 //!
 //! # Example: Building a board and updating it
-//! ```rust,ignore
-//! use dot4ch::{Client, Update, board::Board}
+//! ```ignore
+//! use dot4ch::{Client, Update, board::Board};
+//! 
+//! // Making a client
+//! let client = Client::new();
+//! 
 //! // Building the /g/ board
 //! let board = Board::build(&client, "g").await.unwrap();
 //!
 //! /* Do something with the board */
 //!
 //! // After a long interval, we update it.
-//! let g = board.update(&client);
+//! let g = board.update(&client).await.unwrap();
 //! println!("{:#?}", g);
 //! ```
 

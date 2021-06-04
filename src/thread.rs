@@ -94,7 +94,6 @@ impl Update for Thread {
                 info!("Tried updating Thread within 10 seconds. Sleeping until cooldown...");
                 let dur = Duration::seconds(10).checked_sub(&curr);
                 match dur {
-                    // unwrap is fine here since if its < 0, then we already match with None and return Error.
                     Some(time) => time::sleep(time.to_std()?).await,
                     None => return Err(anyhow::anyhow!("Could not subtract time in Thread")),
                 }

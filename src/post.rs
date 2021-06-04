@@ -7,7 +7,7 @@
 //! ## 4chan API:
 //! /[board]/thread/[op ID].json files are a representation of a single OP and all the replies, which form a thread.
 //!
-//! ```rust
+//! ```
 //! use dot4ch::post::Post;
 //!
 //! let z = Post::default();

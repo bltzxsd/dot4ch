@@ -29,7 +29,7 @@ use tokio::time;
 ///
 /// # Example
 ///
-/// ```rust,ignore
+/// ```ignore
 /// use dot4ch::threadlist::Catalog;
 ///
 /// let catalog = Catalog::new(&client, "g").await?;
@@ -209,8 +209,9 @@ impl Catalog {
     /// - Returns a slice of elements if a range is provided.
     ///
     /// # Example
-    /// ```rust,ignore
-    /// let catalog = Catalog::new(client, "g").await?;
+    ///
+    /// ```ignore
+    /// let catalog = Catalog::new(&client, "g").await?;
     /// println!("{:?}", thread.get(1..4));
     /// ```
     pub fn page(&self, idx: usize) -> Option<&Page> {
@@ -227,15 +228,14 @@ impl Catalog {
 ///
 /// # Example
 ///
-/// ```rust,ignore
+/// ```ignore
 /// use dot4ch::threadlist::CatalogThread;
 ///
 /// let thread = CatalogThread::default();
 ///
-/// // This prints the empty Catalog thread
+/// // The empty Catalog thread
 /// let thread_2 = CatalogThread { no: 0, last_modified: 0, replies: 0 };
 ///
-/// assert_eq!(thread, thread_2);
 /// ```
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Clone, Copy)]
 pub struct CatalogThread {

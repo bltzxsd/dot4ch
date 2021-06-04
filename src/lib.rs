@@ -14,14 +14,15 @@
 //!
 //! ## Example: Getting an image from the OP of a thread
 //!
-//! ```rust,ignore
+//! ```ignore
 //! #[tokio::main]
 //! async fn main() {
+//!     use dot4ch::{Client, thread::Thread};
 //!     let mut client = Client::new();
 //!
 //!     let board = "g";
 //!
-//!     let post_id = 81743559;
+//!     let post_id = 81743559_u32;
 //!
 //!     let thread = Thread::new(&client, board, post_id).await.unwrap();
 //!     
@@ -193,10 +194,10 @@ pub trait IfModifiedSince {
 /// ```
 /// use async_trait::async_trait;
 /// use dot4ch::Update;
-/// type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+/// type Result<T> = anyhow::Result<T>;
 ///
 /// type Client = std::sync::Arc<tokio::sync::Mutex<dot4ch::Client>>;
-/// struct Something { stuff: i32 }
+/// struct Something { pub stuff: i32 }
 ///
 /// #[async_trait(?Send)]
 /// impl Update for Something {
