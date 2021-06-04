@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", g);
 
     // Okay, now that some time has passed we want to update the catalog.
-    let g = g.update(&client).await?;
+    let g = g.update().await?;
 
     // and print that
     println!("{}", g);
