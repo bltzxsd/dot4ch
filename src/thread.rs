@@ -152,7 +152,7 @@ impl Update for Thread {
                 }
             }
         };
-        let _ = self.update_time();
+        self.update_time();
         debug!(
             "Changed last updated time to be: {:?}",
             // This should never fail.
