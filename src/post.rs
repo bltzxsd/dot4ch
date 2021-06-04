@@ -343,7 +343,7 @@ impl Display for Post {
         let status = format!("Archived: {} | Closed: {}", self.archived(), self.closed());
         let fmt = format!(
             "Post ID: {}, Status: {}\n Subject: {}\n Content: {}\n",
-            self.id, &status,self.sub, self.com
+            self.no, &status, self.sub, self.com
         );
         write!(f, "{}", fmt)
     }
