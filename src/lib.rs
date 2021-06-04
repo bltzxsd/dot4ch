@@ -162,7 +162,7 @@ impl Client {
 type Dot4chClient = Arc<Mutex<Client>>;
 
 /// Returns an If-Modified-Since header to be used in requests.
-pub async fn header(client: &Dot4chClient) -> String {
+pub(crate) async fn header(client: &Dot4chClient) -> String {
     trace!("Sending request with If-Modified-Since header");
     format!(
         "{}",
