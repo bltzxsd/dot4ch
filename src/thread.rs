@@ -77,14 +77,14 @@ impl Update for Thread {
         if self.archived {
             let archival_time = match self.archive_time {
                 Some(time) => time.format("%a, %d %b %Y %T"),
-                None => return Err(From::from("Archival time was not found on thread.")),
+                None => return Err(anyhow::anyhow!("Archival time was not found on thread.")),
             };
             let formatted = format!(
                 "Thread: [{}] got archived at: {}",
                 self.op().id(),
                 archival_time
             );
-            return Err(From::from(formatted));
+            return Err(anyhow::anyhow!(formatted));
         }
 
         // Fetch requests staggered every 10 seconds
@@ -95,8 +95,8 @@ impl Update for Thread {
                 let dur = Duration::seconds(10).checked_sub(&curr);
                 match dur {
                     // unwrap is fine here since if its < 0, then we already match with None and return Error.
-                    Some(time) => time::sleep(time.to_std().expect("value could not fit")).await,
-                    None => return Err(From::from("Could not subtract time in Thread")),
+                    Some(time) => time::sleep(time.to_std()?).await,
+                    None => return Err(anyhow::anyhow!("Could not subtract time in Thread")),
                 }
             }
         }
@@ -123,7 +123,7 @@ impl Update for Thread {
                     let last_reply = thread_data.last().map(Post::id);
                     let archived = match thread_data.first() {
                         Some(boolean) => boolean.archived(),
-                        None => return Err(From::from("First post was not found.")),
+                        None => return Err(anyhow::anyhow!("First post was not found.")),
                     };
 
                     Self {
@@ -141,7 +141,7 @@ impl Update for Thread {
                 StatusCode::NOT_MODIFIED => self.clone(),
 
                 unexpected_resp => {
-                    return Err(From::from(format!(
+                    return Err(anyhow::anyhow!(format!(
                         "Got unexpected StatusCode {} from Thread::update()",
                         unexpected_resp
                     )))

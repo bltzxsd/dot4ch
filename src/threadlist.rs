@@ -123,7 +123,7 @@ impl Update for Catalog {
             let dur = Duration::seconds(10).checked_sub(&curr);
             match dur {
                 Some(time) => time::sleep(time.to_std()?).await,
-                None => return Err(From::from("Could not subtract time in Catalog")),
+                None => return Err(anyhow::anyhow!("Could not subtract time in Catalog")),
             }
         }
 
@@ -140,7 +140,7 @@ impl Update for Catalog {
                     self
                 }
                 unexpected_code => {
-                    return Err(From::from(format!(
+                    return Err(anyhow::anyhow!(format!(
                         "Unexpected Status code on Catalog Update: {}",
                         unexpected_code
                     )))
