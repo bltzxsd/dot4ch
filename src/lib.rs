@@ -198,7 +198,7 @@ pub trait IfModifiedSince {
 /// #[async_trait(?Send)]
 /// impl Update for Something {
 ///     type Output = i32;
-///     async fn update(mut self, client: &Client) -> Result<Self::Output> {
+///     async fn update(mut self) -> Result<Self::Output> {
 ///         let out = self.stuff + 32;
 ///         Ok(out)
 ///     }
@@ -209,7 +209,7 @@ pub trait Update {
     /// The type of the output
     type Output;
     /// Returns the updated `self` type.
-    async fn update(mut self, client: &Dot4chClient) -> Result<Self::Output>;
+    async fn update(mut self) -> Result<Self::Output>;
 }
 
 #[doc(hidden)]
