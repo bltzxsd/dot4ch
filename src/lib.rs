@@ -69,14 +69,10 @@
     clippy::enum_glob_use,
     clippy::map_err_ignore,
     clippy::missing_errors_doc,
-    
     clippy::redundant_pub_crate,
-    clippy::wildcard_imports,
+    clippy::wildcard_imports
 )]
-#![allow(
-    clippy::missing_const_for_fn,
-    clippy::must_use_candidate,
-)]
+#![allow(clippy::missing_const_for_fn, clippy::must_use_candidate)]
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};

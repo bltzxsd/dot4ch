@@ -13,10 +13,10 @@
 //! # Example: Building a board and updating it
 //! ```ignore
 //! use dot4ch::{Client, Update, board::Board};
-//! 
+//!
 //! // Making a client
 //! let client = Client::new();
-//! 
+//!
 //! // Building the /g/ board
 //! let board = Board::build(&client, "g").await.unwrap();
 //!
