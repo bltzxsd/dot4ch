@@ -23,7 +23,7 @@
 //! /* Do something with the board */
 //!
 //! // After a long interval, we update it.
-//! let g = board.update(&client).await.unwrap();
+//! let g = board.update().await.unwrap();
 //! println!("{:#?}", g);
 //! ```
 
