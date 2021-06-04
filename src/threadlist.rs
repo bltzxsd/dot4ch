@@ -183,7 +183,11 @@ impl Catalog {
             .lock()
             .await
             .get(&url)
-            .await?
+            .await?;
+
+        threads.error_for_status_ref().map_err(anyhow::Error::from)?;
+
+        let threads = threads
             .json::<Vec<Page>>()
             .await?;
         let last_accessed = Utc::now();

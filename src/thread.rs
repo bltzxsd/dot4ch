@@ -109,6 +109,8 @@ impl Update for Thread {
 
             match response.status() {
                 StatusCode::OK => {
+                    // Note: into json is ok here since StatusCode is OK 
+                    // and any further errors will be from Parsing JSON
                     let thread_data = response.json::<DeserializedThread>().await?.posts;
 
                     let archive_time = thread_data.first().and_then(|data| {
@@ -266,7 +268,11 @@ async fn thread_deserializer(
         .lock()
         .await
         .get(&rq)
-        .await?
+        .await?;
+
+    req.error_for_status_ref().map_err(anyhow::Error::from)?;
+
+    let req = req
         .json::<DeserializedThread>()
         .await?;
     debug!("Deserialized Post: {}", post_num);
