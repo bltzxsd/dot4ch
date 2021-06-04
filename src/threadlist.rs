@@ -29,7 +29,7 @@ use tokio::time;
 ///
 /// # Example
 ///
-/// ```rust,ignore
+/// ```ignore
 /// use dot4ch::threadlist::Catalog;
 ///
 /// let catalog = Catalog::new(&client, "g").await?;
@@ -47,16 +47,8 @@ pub struct Catalog {
     threads: Vec<Page>,
     /// The time when catalog was accessed
     last_accessed: DateTime<Utc>,
-}
-
-impl Default for Catalog {
-    fn default() -> Self {
-        Self {
-            board: String::new(),
-            threads: vec![Page::default()],
-            last_accessed: Utc::now(),
-        }
-    }
+    /// client
+    client: Dot4chClient,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
@@ -113,7 +105,7 @@ impl Display for Page {
 impl Update for Catalog {
     type Output = Self;
     /// Returns an updated catalog.
-    async fn update(mut self, client: &Dot4chClient) -> crate::Result<Self> {
+    async fn update(mut self) -> crate::Result<Self> {
         let curr = Utc::now().signed_duration_since(self.last_accessed);
         if curr < Duration::seconds(10) {
             debug!(
@@ -123,24 +115,25 @@ impl Update for Catalog {
             let dur = Duration::seconds(10).checked_sub(&curr);
             match dur {
                 Some(time) => time::sleep(time.to_std()?).await,
-                None => return Err(From::from("Could not subtract time in Catalog")),
+                None => return Err(anyhow::anyhow!("Could not subtract time in Catalog")),
             }
         }
 
         let updated_catalog = {
-            let header = header(client).await;
+            let header = header(&self.client).await;
             let get_url = format!("https://a.4cdn.org/{}/threads.json", self.board);
-            let response = Self::fetch(client, &get_url, &header).await?;
-            client.lock().await.last_checked = Utc::now();
+            let response = Self::fetch(&self.client, &get_url, &header).await?;
+            
+            self.client.lock().await.last_checked = Utc::now();
 
             match response.status() {
-                StatusCode::OK => Self::new(client, &self.board).await?,
+                StatusCode::OK => Self::new(&self.client, &self.board).await?,
                 StatusCode::NOT_MODIFIED => {
                     self.last_accessed = Utc::now();
                     self
                 }
                 unexpected_code => {
-                    return Err(From::from(format!(
+                    return Err(anyhow::anyhow!(format!(
                         "Unexpected Status code on Catalog Update: {}",
                         unexpected_code
                     )))
@@ -179,19 +172,20 @@ impl Catalog {
     /// This function will return an error if the board isn't valid
     pub async fn new(client: &Dot4chClient, board: &str) -> crate::Result<Self> {
         let url = format!("https://a.4cdn.org/{}/threads.json", board);
-        let threads = client
-            .lock()
-            .await
-            .get(&url)
-            .await?
-            .json::<Vec<Page>>()
-            .await?;
+        let threads = client.lock().await.get(&url).await?;
+
+        threads
+            .error_for_status_ref()
+            .map_err(anyhow::Error::from)?;
+
+        let threads = threads.json::<Vec<Page>>().await?;
         let last_accessed = Utc::now();
 
         Ok(Self {
             threads,
             last_accessed,
             board: board.to_string(),
+            client: client.clone(),
         })
     }
 
@@ -209,8 +203,9 @@ impl Catalog {
     /// - Returns a slice of elements if a range is provided.
     ///
     /// # Example
-    /// ```rust,ignore
-    /// let catalog = Catalog::new(client, "g").await?;
+    ///
+    /// ```ignore
+    /// let catalog = Catalog::new(&client, "g").await?;
     /// println!("{:?}", thread.get(1..4));
     /// ```
     pub fn page(&self, idx: usize) -> Option<&Page> {
@@ -227,15 +222,14 @@ impl Catalog {
 ///
 /// # Example
 ///
-/// ```rust,ignore
+/// ```ignore
 /// use dot4ch::threadlist::CatalogThread;
 ///
 /// let thread = CatalogThread::default();
 ///
-/// // This prints the empty Catalog thread
+/// // The empty Catalog thread
 /// let thread_2 = CatalogThread { no: 0, last_modified: 0, replies: 0 };
 ///
-/// assert_eq!(thread, thread_2);
 /// ```
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Clone, Copy)]
 pub struct CatalogThread {

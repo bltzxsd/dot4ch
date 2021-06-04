@@ -7,7 +7,7 @@
 //! ## 4chan API:
 //! /[board]/thread/[op ID].json files are a representation of a single OP and all the replies, which form a thread.
 //!
-//! ```rust
+//! ```
 //! use dot4ch::post::Post;
 //!
 //! let z = Post::default();
@@ -340,9 +340,10 @@ impl Post {
 
 impl Display for Post {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let status = format!("Archived: {} | Closed: {}", self.archived(), self.closed());
         let fmt = format!(
-            "Post ID: {}\n Subject: {}\n Content: {}\n",
-            self.id, self.sub, self.com
+            "Post ID: {}, Status: {}\n Subject: {}\n Content: {}\n",
+            self.no, &status, self.sub, self.com
         );
         write!(f, "{}", fmt)
     }

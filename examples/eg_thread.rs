@@ -33,7 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", sample_thread.op());
 
     // Say we want to update the thread
-    let _ = sample_thread.update(&client).await?;
+    let _ = sample_thread.update().await?;
     // This will either return a 304 Not Modified with our thread or a 200 OK with an updated thread.
 
     Ok(())

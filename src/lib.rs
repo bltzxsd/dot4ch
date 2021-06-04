@@ -14,14 +14,15 @@
 //!
 //! ## Example: Getting an image from the OP of a thread
 //!
-//! ```rust,ignore
+//! ```ignore
 //! #[tokio::main]
 //! async fn main() {
+//!     use dot4ch::{Client, thread::Thread};
 //!     let mut client = Client::new();
 //!
 //!     let board = "g";
 //!
-//!     let post_id = 81743559;
+//!     let post_id = 81743559_u32;
 //!
 //!     let thread = Thread::new(&client, board, post_id).await.unwrap();
 //!     
@@ -59,9 +60,7 @@
     missing_copy_implementations,
     missing_debug_implementations,
     unused_qualifications,
-    variant_size_differences
-)]
-#![allow(
+    variant_size_differences,
     clippy::cast_lossless,
     clippy::cast_possible_truncation,
     clippy::cast_possible_wrap,
@@ -70,17 +69,16 @@
     clippy::enum_glob_use,
     clippy::map_err_ignore,
     clippy::missing_errors_doc,
-    clippy::must_use_candidate,
     clippy::redundant_pub_crate,
-    clippy::wildcard_imports,
-    clippy::missing_const_for_fn
+    clippy::wildcard_imports
 )]
+#![allow(clippy::missing_const_for_fn, clippy::must_use_candidate)]
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use log::{info, trace};
 use reqwest::Response;
-use std::{error::Error, result, sync::Arc};
+use std::sync::Arc;
 use tokio::{
     sync::Mutex,
     time::{sleep, Duration as TkDuration},
@@ -92,7 +90,8 @@ pub mod thread;
 pub mod threadlist;
 
 /// Crate result type
-pub(crate) type Result<T> = result::Result<T, Box<dyn Error>>;
+// pub(crate) type Result<T> = result::Result<T, Box<dyn Error>>;
+pub(crate) type Result<T> = anyhow::Result<T>;
 
 /// The main client for accessing API.
 /// Handles updates, board and `reqwest::Client`
@@ -159,7 +158,7 @@ impl Client {
 type Dot4chClient = Arc<Mutex<Client>>;
 
 /// Returns an If-Modified-Since header to be used in requests.
-pub async fn header(client: &Dot4chClient) -> String {
+pub(crate) async fn header(client: &Dot4chClient) -> String {
     trace!("Sending request with If-Modified-Since header");
     format!(
         "{}",
@@ -191,15 +190,15 @@ pub trait IfModifiedSince {
 /// ```
 /// use async_trait::async_trait;
 /// use dot4ch::Update;
-/// type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+/// type Result<T> = anyhow::Result<T>;
 ///
 /// type Client = std::sync::Arc<tokio::sync::Mutex<dot4ch::Client>>;
-/// struct Something { stuff: i32 }
+/// struct Something { pub stuff: i32 }
 ///
 /// #[async_trait(?Send)]
 /// impl Update for Something {
 ///     type Output = i32;
-///     async fn update(mut self, client: &Client) -> Result<Self::Output> {
+///     async fn update(mut self) -> Result<Self::Output> {
 ///         let out = self.stuff + 32;
 ///         Ok(out)
 ///     }
@@ -210,7 +209,7 @@ pub trait Update {
     /// The type of the output
     type Output;
     /// Returns the updated `self` type.
-    async fn update(mut self, client: &Dot4chClient) -> Result<Self::Output>;
+    async fn update(mut self) -> Result<Self::Output>;
 }
 
 #[doc(hidden)]

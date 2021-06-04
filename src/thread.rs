@@ -33,6 +33,8 @@ pub struct Thread {
     archived: bool,
     /// Last time the thread was requested.
     last_update: Option<DateTime<Utc>>,
+    /// the client
+    client: Dot4chClient,
 }
 
 impl Display for Thread {
@@ -73,18 +75,18 @@ impl Update for Thread {
     ///
     /// `update()` respects
     /// 4chan's 10 seconds between each chan thread call.
-    async fn update(mut self, client: &Dot4chClient) -> Result<Self> {
+    async fn update(mut self) -> Result<Self> {
         if self.archived {
             let archival_time = match self.archive_time {
                 Some(time) => time.format("%a, %d %b %Y %T"),
-                None => return Err(From::from("Archival time was not found on thread.")),
+                None => return Err(anyhow::anyhow!("Archival time was not found on thread.")),
             };
             let formatted = format!(
                 "Thread: [{}] got archived at: {}",
                 self.op().id(),
                 archival_time
             );
-            return Err(From::from(formatted));
+            return Err(anyhow::anyhow!(formatted));
         }
 
         // Fetch requests staggered every 10 seconds
@@ -94,9 +96,8 @@ impl Update for Thread {
                 info!("Tried updating Thread within 10 seconds. Sleeping until cooldown...");
                 let dur = Duration::seconds(10).checked_sub(&curr);
                 match dur {
-                    // unwrap is fine here since if its < 0, then we already match with None and return Error.
-                    Some(time) => time::sleep(time.to_std().expect("value could not fit")).await,
-                    None => return Err(From::from("Could not subtract time in Thread")),
+                    Some(time) => time::sleep(time.to_std()?).await,
+                    None => return Err(anyhow::anyhow!("Could not subtract time in Thread")),
                 }
             }
         }
@@ -104,12 +105,14 @@ impl Update for Thread {
         // If-Modified-Since: Wed, 21 Oct 2015 07:28:00 GMT
         // strftime fmt:      %a , %d %b  %Y   %T       GMT
         let updated_thread = {
-            let header = crate::header(client).await;
-            let response = Self::fetch(client, &self.thread_url(), &header).await?;
-            client.lock().await.last_checked = Utc::now();
+            let header = crate::header(&self.client).await;
+            let response = Self::fetch(&self.client, &self.thread_url(), &header).await?;
+            self.client.lock().await.last_checked = Utc::now();
 
             match response.status() {
                 StatusCode::OK => {
+                    // Note: into json is ok here since StatusCode is OK
+                    // and any further errors will be from Parsing JSON
                     let thread_data = response.json::<DeserializedThread>().await?.posts;
 
                     let archive_time = thread_data.first().and_then(|data| {
@@ -123,7 +126,7 @@ impl Update for Thread {
                     let last_reply = thread_data.last().map(Post::id);
                     let archived = match thread_data.first() {
                         Some(boolean) => boolean.archived(),
-                        None => return Err(From::from("First post was not found.")),
+                        None => return Err(anyhow::anyhow!("First post was not found.")),
                     };
 
                     Self {
@@ -135,27 +138,28 @@ impl Update for Thread {
                         archive_time,
                         archived,
                         last_update: None,
+                        client: self.client.clone(),
                     }
                 }
 
                 StatusCode::NOT_MODIFIED => self.clone(),
 
                 unexpected_resp => {
-                    return Err(From::from(format!(
+                    return Err(anyhow::anyhow!(format!(
                         "Got unexpected StatusCode {} from Thread::update()",
                         unexpected_resp
                     )))
                 }
             }
         };
-        let _ = self.update_time();
+        self.update_time();
         debug!(
             "Changed last updated time to be: {:?}",
             // This should never fail.
             self.last_update.expect("last update debug log failed")
         );
 
-        client.lock().await.last_checked = Utc::now();
+        self.client.lock().await.last_checked = Utc::now();
         Ok(updated_thread)
     }
 }
@@ -192,6 +196,7 @@ impl Thread {
             archive_time,
             archived,
             last_update: None,
+            client: client.clone(),
         })
     }
 
@@ -263,13 +268,11 @@ async fn thread_deserializer(
     post_num: u32,
 ) -> Result<DeserializedThread> {
     let rq = format!("https://a.4cdn.org/{}/thread/{}.json", board, post_num);
-    let req = client
-        .lock()
-        .await
-        .get(&rq)
-        .await?
-        .json::<DeserializedThread>()
-        .await?;
+    let req = client.lock().await.get(&rq).await?;
+
+    req.error_for_status_ref().map_err(anyhow::Error::from)?;
+
+    let req = req.json::<DeserializedThread>().await?;
     debug!("Deserialized Post: {}", post_num);
     Ok(req)
 }
