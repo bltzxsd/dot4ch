@@ -31,13 +31,9 @@ use crate::{thread::Thread, threadlist::Catalog, Dot4chClient, Update};
 use async_trait::async_trait;
 use log::info;
 
-/// Type alias for not wrting Arc<Mute<Client>>
-type CrateClient = Arc<tokio::sync::Mutex<crate::Client>>;
-
 use std::{
     collections::HashMap,
     io::{self, Write},
-    sync::Arc,
 };
 
 #[derive(Debug)]
@@ -47,6 +43,8 @@ pub struct Board {
     pub threads: HashMap<u32, Thread>,
     /// The board on this instance of board is based.
     board: String,
+    /// the client
+    client: Dot4chClient,
 }
 
 impl Board {
@@ -88,6 +86,7 @@ impl Board {
         Ok(Self {
             threads: id_thread_zip,
             board: board.to_string(),
+            client: client.clone(),
         })
     }
 
@@ -118,11 +117,11 @@ impl Update for Board {
     /// It is recommended to call this infrequently due to API calls having cooldowns.
     ///
     /// Uses `If-Modified-Since` header internally.
-    async fn update(mut self, client: &CrateClient) -> crate::Result<Self::Output> {
+    async fn update(mut self) -> crate::Result<Self::Output> {
         // get the ID's of all the threads we need
         // we have to call this again because there might be new thread that need to be added.
         writeln!(io::stdout(), "Updating Board. Please wait..")?;
-        let catalog = Catalog::new(client, &self.board).await?;
+        let catalog = Catalog::new(&self.client, &self.board).await?;
         let ids: Vec<_> = catalog
             .all_pages()
             .into_iter()
@@ -133,7 +132,7 @@ impl Update for Board {
         let mut threads = vec![];
         for (num, (id, thread)) in self.threads.into_iter().enumerate() {
             // update all threads with the ID
-            threads.push(thread.update(client).await?);
+            threads.push(thread.update().await?);
             info!(
                 "Updating thread: {}\t Threads updated: {}/{}",
                 id,
@@ -151,6 +150,7 @@ impl Update for Board {
         Ok(Self {
             threads: id_thread_zip,
             board: self.board,
+            client: self.client,
         })
     }
 }
