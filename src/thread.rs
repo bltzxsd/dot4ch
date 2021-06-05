@@ -133,7 +133,10 @@ impl Update for Thread {
     async fn fetch_status(mut self, response: Response) -> Result<Thread> {
         match response.status() {
             StatusCode::OK => self.into_upper(response).await,
-            StatusCode::NOT_MODIFIED => Ok(self),
+            StatusCode::NOT_MODIFIED => {
+                self.last_update = Some(Utc::now());
+                Ok(self)
+            }
             other_resp => return Err(anyhow::anyhow!("Unexpected StatusCode {}", other_resp)),
         }
     }
@@ -182,7 +185,7 @@ impl Thread {
         } else {
             None
         };
-        
+
         Ok(Self {
             op,
             board: board.to_string(),
