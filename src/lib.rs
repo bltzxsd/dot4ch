@@ -64,7 +64,6 @@
     clippy::cast_lossless,
     clippy::cast_possible_truncation,
     clippy::cast_possible_wrap,
-    clippy::cast_precision_loss,
     clippy::cast_sign_loss,
     clippy::enum_glob_use,
     clippy::map_err_ignore,
@@ -72,7 +71,11 @@
     clippy::redundant_pub_crate,
     clippy::wildcard_imports
 )]
-#![allow(clippy::missing_const_for_fn, clippy::must_use_candidate)]
+#![allow(
+    clippy::missing_const_for_fn,
+    clippy::must_use_candidate,
+    clippy::cast_precision_loss
+)]
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
@@ -90,7 +93,6 @@ pub mod thread;
 pub mod threadlist;
 
 /// Crate result type
-// pub(crate) type Result<T> = result::Result<T, Box<dyn Error>>;
 pub(crate) type Result<T> = anyhow::Result<T>;
 
 /// The main client for accessing API.
@@ -187,7 +189,7 @@ pub trait IfModifiedSince {
 /// By default, only Threads, Catalogs, and Boards can be updated.
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// use async_trait::async_trait;
 /// use dot4ch::Update;
 /// type Result<T> = anyhow::Result<T>;
@@ -206,10 +208,19 @@ pub trait IfModifiedSince {
 /// ```
 #[async_trait(?Send)]
 pub trait Update {
-    /// The type of the output
+    /// The type of the output.
     type Output;
     /// Returns the updated `self` type.
     async fn update(mut self) -> Result<Self::Output>;
+
+    /// Refreshes the last time the thread was accessed.
+    async fn refresh_time(&mut self) -> Result<()>;
+
+    /// Matches the `Self` 's status code to see if it has been updated,
+    async fn fetch_status(mut self, response: Response) -> Result<Self::Output>;
+
+    /// Converts a `Response` into a concrete object.
+    async fn into_upper(self, response: Response) -> Result<Self::Output>;
 }
 
 #[doc(hidden)]

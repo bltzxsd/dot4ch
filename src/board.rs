@@ -153,4 +153,40 @@ impl Update for Board {
             client: self.client,
         })
     }
+
+    /// This is an unimplemented function that WILL panic.
+    ///
+    /// # Do NOT call this function
+    /// Since the `Board` is a fancy hashmap all its threads individually,
+    /// it uses the update functions on each threads.
+    /// which DO implement this method.
+    ///
+    /// Therefore, this does not need to be implemented.
+    async fn refresh_time(&mut self) -> crate::Result<()> {
+        panic!("Called unusable function!")
+    }
+
+    /// This is an unimplemented function that WILL panic.
+    ///
+    /// # Do NOT call this function
+    /// Since the `Board` is a fancy hashmap all its threads individually,
+    /// it uses the update functions on each threads.
+    /// which DO implement this method.
+    ///
+    /// Therefore, this does not need to be implemented.
+    async fn fetch_status(mut self, _: reqwest::Response) -> crate::Result<Self::Output> {
+        panic!("Called unusable function!")
+    }
+
+    /// This is an unimplemented function that WILL panic.
+    ///
+    /// # Do NOT call this function
+    /// Since the `Board` is a fancy hashmap all its threads individually,
+    /// it uses the update functions on each threads.
+    /// which DO implement this method.
+    ///
+    /// Therefore, this does not need to be implemented.
+    async fn into_upper(self, _: reqwest::Response) -> crate::Result<Self::Output> {
+        panic!()
+    }
 }

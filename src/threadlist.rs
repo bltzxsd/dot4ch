@@ -80,7 +80,7 @@ impl Display for Catalog {
         let fmt = format!(
             "Board: /{}/\nLast accessed: {}\nPages: {}",
             self.board,
-            self.last_accessed,
+            self.last_accessed.format("%a, %d %b %Y %T").to_string(),
             self.threads.iter().map(Page::to_string).collect::<String>()
         );
         write!(f, "{}", fmt)
@@ -106,42 +106,70 @@ impl Update for Catalog {
     type Output = Self;
     /// Returns an updated catalog.
     async fn update(mut self) -> crate::Result<Self> {
-        let curr = Utc::now().signed_duration_since(self.last_accessed);
-        if curr < Duration::seconds(10) {
-            debug!(
-                "Tried updating Catalog within 10 seconds. Sleeping until cooldown: {}",
-                curr
-            );
-            let dur = Duration::seconds(10).checked_sub(&curr);
-            match dur {
-                Some(time) => time::sleep(time.to_std()?).await,
-                None => return Err(anyhow::anyhow!("Could not subtract time in Catalog")),
-            }
-        }
+        self.refresh_time().await?;
 
         let updated_catalog = {
             let header = header(&self.client).await;
-            let get_url = format!("https://a.4cdn.org/{}/threads.json", self.board);
+            let get_url = format!("https://a.4cdn.org/{}/threads.json", &self.board);
             let response = Self::fetch(&self.client, &get_url, &header).await?;
-            
+
             self.client.lock().await.last_checked = Utc::now();
 
-            match response.status() {
-                StatusCode::OK => Self::new(&self.client, &self.board).await?,
-                StatusCode::NOT_MODIFIED => {
-                    self.last_accessed = Utc::now();
-                    self
-                }
-                unexpected_code => {
-                    return Err(anyhow::anyhow!(format!(
-                        "Unexpected Status code on Catalog Update: {}",
-                        unexpected_code
-                    )))
-                }
-            }
+            self.fetch_status(response).await?
         };
 
         Ok(updated_catalog)
+    }
+
+    /// Refreshes the time in the `Thread` instance.
+    /// also handles the sleep of the thread update.
+    ///
+    /// # Errors
+    ///
+    /// This function should probably not fail **but** can fail
+    /// if
+    async fn refresh_time(&mut self) -> crate::Result<()> {
+        let curr = Utc::now().signed_duration_since(self.last_accessed);
+        if curr < Duration::seconds(10) {
+            debug!(
+                "Updating Catalog too quickly! Waiting for {} seconds",
+                (10000_f32 - curr.num_milliseconds() as f32) / 1000_f32
+            );
+            match Duration::seconds(10).checked_sub(&curr) {
+                Some(time) => time::sleep(time.to_std()?).await,
+                None => return Err(anyhow::anyhow!("Overflow in subtraction of `Duration`")),
+            }
+        }
+        Ok(())
+    }
+
+    /// Updates the status of a `Response` and generates a new Catalog if needed.
+    async fn fetch_status(mut self, response: Response) -> crate::Result<Self::Output> {
+        Ok(match response.status() {
+            StatusCode::OK => self.into_upper(response).await?,
+            StatusCode::NOT_MODIFIED => {
+                self.last_accessed = Utc::now();
+                self
+            }
+            other => {
+                return Err(anyhow::anyhow!(
+                    "Unexpected StatusCode on Catalog Update: {}",
+                    other
+                ))
+            }
+        })
+    }
+
+    /// Converts the `Response` into a `Catalog`
+    async fn into_upper(self, response: Response) -> crate::Result<Self::Output> {
+        let threads = response.json::<Vec<Page>>().await?;
+        let last_accessed = Utc::now();
+        Ok(Self {
+            threads,
+            last_accessed,
+            board: self.board.to_string(),
+            client: self.client.clone(),
+        })
     }
 }
 
@@ -179,11 +207,10 @@ impl Catalog {
             .map_err(anyhow::Error::from)?;
 
         let threads = threads.json::<Vec<Page>>().await?;
-        let last_accessed = Utc::now();
 
         Ok(Self {
             threads,
-            last_accessed,
+            last_accessed: Utc::now(),
             board: board.to_string(),
             client: client.clone(),
         })
