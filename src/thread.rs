@@ -6,7 +6,7 @@ use async_trait::async_trait;
 
 use super::{post::Post, Result};
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use log::{debug, info};
+use log::debug;
 use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
@@ -78,89 +78,85 @@ impl Update for Thread {
     async fn update(mut self) -> Result<Self> {
         if self.archived {
             let archival_time = match self.archive_time {
+                // If-Modified-Since: Wed, 21 Oct 2015 07:28:00 GMT
+                // strftime fmt:      %a , %d %b  %Y   %T       GMT
                 Some(time) => time.format("%a, %d %b %Y %T"),
                 None => return Err(anyhow::anyhow!("Archival time was not found on thread.")),
             };
-            let formatted = format!(
+
+            return Err(anyhow::anyhow!(
                 "Thread: [{}] got archived at: {}",
                 self.op().id(),
                 archival_time
-            );
-            return Err(anyhow::anyhow!(formatted));
+            ));
         }
 
-        // Fetch requests staggered every 10 seconds
-        if let Some(time) = self.last_update {
-            let curr = Utc::now().signed_duration_since(time);
-            if curr < Duration::seconds(10) {
-                info!("Tried updating Thread within 10 seconds. Sleeping until cooldown...");
-                let dur = Duration::seconds(10).checked_sub(&curr);
-                match dur {
-                    Some(time) => time::sleep(time.to_std()?).await,
-                    None => return Err(anyhow::anyhow!("Could not subtract time in Thread")),
-                }
-            }
-        }
+        self.refresh_time().await?;
 
-        // If-Modified-Since: Wed, 21 Oct 2015 07:28:00 GMT
-        // strftime fmt:      %a , %d %b  %Y   %T       GMT
-        let updated_thread = {
+        let mut updated_thread = {
             let header = crate::header(&self.client).await;
             let response = Self::fetch(&self.client, &self.thread_url(), &header).await?;
             self.client.lock().await.last_checked = Utc::now();
 
-            match response.status() {
-                StatusCode::OK => {
-                    // Note: into json is ok here since StatusCode is OK
-                    // and any further errors will be from Parsing JSON
-                    let thread_data = response.json::<DeserializedThread>().await?.posts;
+            self.fetch_status(response).await?
+        };
 
-                    let archive_time = thread_data.first().and_then(|data| {
-                        if data.archived() {
-                            Some(NaiveDateTime::from_timestamp(data.archived_on(), 0))
-                        } else {
-                            None
-                        }
-                    });
+        updated_thread.update_time();
 
-                    let last_reply = thread_data.last().map(Post::id);
-                    let archived = match thread_data.first() {
-                        Some(boolean) => boolean.archived(),
-                        None => return Err(anyhow::anyhow!("First post was not found.")),
-                    };
+        debug!(
+            "Changed last updated time to be: {:?}",
+            updated_thread.client.lock().await.last_checked
+        );
 
-                    Self {
-                        op: thread_data.first().expect("NO OP FOUND").clone(),
-                        board: self.board().to_string(),
-                        replies_no: thread_data.len() - 1_usize,
-                        last_reply,
-                        all_replies: thread_data.iter().skip(1).cloned().collect(),
-                        archive_time,
-                        archived,
-                        last_update: None,
-                        client: self.client.clone(),
-                    }
-                }
+        updated_thread.client.lock().await.last_checked = Utc::now();
+        Ok(updated_thread)
+    }
 
-                StatusCode::NOT_MODIFIED => self.clone(),
-
-                unexpected_resp => {
-                    return Err(anyhow::anyhow!(format!(
-                        "Got unexpected StatusCode {} from Thread::update()",
-                        unexpected_resp
-                    )))
+    async fn refresh_time(&mut self) -> Result<()> {
+        if let Some(time) = self.last_update {
+            let curr = Utc::now().signed_duration_since(time);
+            if curr < Duration::seconds(10) {
+                debug!(
+                    "Updating Thread too quickly! Waiting for {} seconds",
+                    10000_f32 - curr.num_milliseconds() as f32 / 1000_f32
+                );
+                match Duration::seconds(10).checked_sub(&curr) {
+                    Some(time) => time::sleep(time.to_std()?).await,
+                    None => return Err(anyhow::anyhow!("Overflow in subtraction of `Duration`s")),
                 }
             }
         };
-        self.update_time();
-        debug!(
-            "Changed last updated time to be: {:?}",
-            // This should never fail.
-            self.last_update.expect("last update debug log failed")
-        );
+        Ok(())
+    }
 
-        self.client.lock().await.last_checked = Utc::now();
-        Ok(updated_thread)
+    /// Checks the status of a `Response and generates a new thread if needed.`
+    async fn fetch_status(mut self, response: Response) -> Result<Thread> {
+        match response.status() {
+            StatusCode::OK => self.into_upper(response).await,
+            StatusCode::NOT_MODIFIED => Ok(self),
+            other_resp => return Err(anyhow::anyhow!("Unexpected StatusCode {}", other_resp)),
+        }
+    }
+
+    /// Converts the `Response` into a `Thread`
+    async fn into_upper(self, response: Response) -> Result<Self::Output> {
+        // Note: into json is ok here since StatusCode is OK
+        // and any further errors will be from Parsing JSON
+        let thread_data = response.json::<DeserializedThread>().await?.posts;
+
+        Ok(Self {
+            op: thread_data.first().expect("No OP found").clone(),
+            board: self.board().to_string(),
+            replies_no: thread_data.len() - 1_usize,
+            last_reply: thread_data.last().map(Post::id),
+            all_replies: thread_data.iter().skip(1).cloned().collect(),
+            archive_time: thread_data
+                .first()
+                .map(|data| NaiveDateTime::from_timestamp(data.archived_on(), 0)),
+            archived: thread_data.first().expect("No OP found.").archived(),
+            last_update: Some(Utc::now()),
+            client: self.client.clone(),
+        })
     }
 }
 
@@ -178,15 +174,15 @@ impl Thread {
         let thread_data = thread_deserializer(client, board, post_id).await?.posts;
         let op = { thread_data.first().expect("NO OP FOUND").clone() };
         let archived = op.archived();
+        let last_reply = thread_data.last().map(Post::id);
+
         let archive_time = if archived {
-            let timestamp = thread_data.first().expect("First not found.").archived_on();
-            let naive = NaiveDateTime::from_timestamp(timestamp, 0);
-            Some(naive)
+            let secs = thread_data.first().expect("NO OP FOUND").archived_on();
+            Some(NaiveDateTime::from_timestamp(secs, 0))
         } else {
             None
         };
-        let last_reply = thread_data.last().map(Post::id);
-
+        
         Ok(Self {
             op,
             board: board.to_string(),
