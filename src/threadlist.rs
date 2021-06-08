@@ -69,7 +69,7 @@ impl Page {
         self.threads
     }
 
-    /// Gets the page number of a page.
+    /// Returns the page number of a page.
     pub fn num(self) -> u8 {
         self.page
     }
@@ -221,25 +221,12 @@ impl Catalog {
         self.last_accessed = Utc::now();
     }
 
-    /// Returns a reference to the thread depending on argument.
-    ///
-    /// Uses the `get()` method on `Vec`.
-    ///
-    /// - Returns `None` if the provided index is out of bounds.
-    /// - Returns a single element if a single index is provided.
-    /// - Returns a slice of elements if a range is provided.
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// let catalog = Catalog::new(&client, "g").await?;
-    /// println!("{:?}", thread.get(1..4));
-    /// ```
-    pub fn page(&self, index: std::ops::Range<usize>) -> Option<&[Page]> {
+    /// Returns a reference to the Page if it exists. None otherwise
+    pub fn page(&self, index: usize) -> Option<&Page> {
         self.threads.get(index)
     }
 
-    /// Get all the pages from the catalog.
+    /// Returns all the pages from the catalog.
     pub fn all_pages(self) -> Vec<Page> {
         self.threads
     }
@@ -296,3 +283,19 @@ impl Display for CatalogThread {
         write!(f, "{}", fmt)
     }
 }
+
+/* depending on argument.
+///
+/// Uses the `get()` method on `Vec`.
+///
+/// - Returns `None` if the provided index is out of bounds.
+/// - Returns a single element if a single index is provided.
+/// - Returns a slice of elements if a range is provided.
+///
+/// # Example
+///
+/// ```ignore
+/// let catalog = Catalog::new(&client, "g").await?;
+/// println!("{:?}", thread.get(1..4));
+/// ```
+ */

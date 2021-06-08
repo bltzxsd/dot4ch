@@ -9,10 +9,7 @@ use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use log::debug;
 use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt::{Display, Formatter},
-    ops::Range,
-};
+use std::fmt::{Display, Formatter};
 use tokio::time;
 
 /// The main end user interface to the 4chan thread API.
@@ -229,8 +226,17 @@ impl Thread {
     /// - Returns `None` if the provided index is out of bounds.
     /// - Returns a single element if a single index is provided.
     /// - Returns a slice of elements if a range is provided.
-    pub fn get(&self, index: Range<usize>) -> Option<&[Post]> {
+    #[cfg(feature = "unstable")]
+    pub fn get_range<T: Iterator + IntoIterator>(&self, index: Range<T>) -> Option<&[Post]> {
         self.all_replies.get(index)
+    }
+
+    /// Returns a reference to a post from a thread
+    ///
+    /// Returns `None` if it does not exist.
+    /// Returns a reference to the thread
+    pub fn get(&self, idx: usize) -> Option<&Post> {
+        self.all_replies.get(idx)
     }
 
     /// Return the last post from a thread
