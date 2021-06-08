@@ -9,7 +9,10 @@ use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use log::debug;
 use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    slice::SliceIndex,
+};
 use tokio::time;
 
 /// The main end user interface to the 4chan thread API.
@@ -216,10 +219,20 @@ impl Thread {
         &self.op
     }
 
-    /// Returns a specific post from a thread by its index in the thread.
+    /// Returns a reference to a post from a thread depending on argument.
     ///
     /// Returns `None` if it does not exist.
-    pub fn get(&self, idx: usize) -> Option<&Post> {
+    /// Returns a reference to the thread depending on argument.
+    ///
+    /// Uses the `get()` method on `Vec`.
+    ///
+    /// - Returns `None` if the provided index is out of bounds.
+    /// - Returns a single element if a single index is provided.
+    /// - Returns a slice of elements if a range is provided.
+    pub fn get<I>(&self, idx: I) -> Option<&Post>
+    where
+        I: SliceIndex<[Post], Output = Post>,
+    {
         self.all_replies.get(idx)
     }
 
