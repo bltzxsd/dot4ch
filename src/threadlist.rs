@@ -21,7 +21,7 @@ use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use log::debug;
 use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
-use std::{fmt::{self, Display, Formatter}, slice::SliceIndex};
+use std::fmt::{self, Display, Formatter};
 use tokio::time;
 
 /// A summarized list of all threads on a board including
@@ -235,11 +235,8 @@ impl Catalog {
     /// let catalog = Catalog::new(&client, "g").await?;
     /// println!("{:?}", thread.get(1..4));
     /// ```
-    pub fn page<I>(&self, idx: I) -> Option<&Page> 
-    where
-        I: SliceIndex<[Page], Output = Page>
-    {
-        self.threads.get(idx)
+    pub fn page(&self, index: std::ops::Range<usize>) -> Option<&[Page]> {
+        self.threads.get(index)
     }
 
     /// Get all the pages from the catalog.

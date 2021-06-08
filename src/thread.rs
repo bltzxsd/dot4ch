@@ -11,7 +11,7 @@ use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::{Display, Formatter},
-    slice::SliceIndex,
+    ops::Range,
 };
 use tokio::time;
 
@@ -229,11 +229,8 @@ impl Thread {
     /// - Returns `None` if the provided index is out of bounds.
     /// - Returns a single element if a single index is provided.
     /// - Returns a slice of elements if a range is provided.
-    pub fn get<I>(&self, idx: I) -> Option<&Post>
-    where
-        I: SliceIndex<[Post], Output = Post>,
-    {
-        self.all_replies.get(idx)
+    pub fn get(&self, index: Range<usize>) -> Option<&[Post]> {
+        self.all_replies.get(index)
     }
 
     /// Return the last post from a thread
