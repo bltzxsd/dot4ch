@@ -5,7 +5,7 @@
 //! Posts are usually used in `Thread`s which is why they do not have a `new()` but they do have an `Default` implementation.
 //!
 //! ## 4chan API:
-//! /[board]/thread/[op ID].json files are a representation of a single OP and all the replies, which form a thread.
+//! /<board>/<thread>/<op ID>.json files are a representation of a single OP and all the replies, which form a thread.
 //!
 //! ```
 //! use dot4ch::post::Post;
@@ -242,13 +242,13 @@ impl Post {
 
     /// Returns the 4chan image url from the supplied post.
     pub fn image_url(&self, board: &str) -> Option<String> {
-        if !self.filename.is_empty() && !self.ext.is_empty() {
+        if self.filename.is_empty() {
+            None
+        } else {
             Some(format!(
                 "https://i.4cdn.org/{}/{}{}",
                 board, &self.tim, &self.ext
             ))
-        } else {
-            None
         }
     }
 

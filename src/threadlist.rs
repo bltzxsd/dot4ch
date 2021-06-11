@@ -15,7 +15,7 @@
 //! - The number of replies a thread has
 //!
 
-use crate::{header, Dot4chClient, IfModifiedSince, Update};
+use crate::{header, Dot4chClient, IfModifiedSince, Procedures, Update};
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use log::debug;
@@ -29,13 +29,16 @@ use tokio::time;
 ///
 /// # Example
 ///
-/// ```ignore
-/// use dot4ch::threadlist::Catalog;
+/// ```
+/// # async fn catalog_check() {
+/// # use dot4ch::{threadlist::Catalog, Client};
+/// # let client = Client::new();
+/// let catalog = Catalog::new(&client, "g").await.unwrap();
 ///
-/// let catalog = Catalog::new(&client, "g").await?;
+/// // print the first page
 ///
-/// // prints the first page
-/// println!("{:?}", catalog.page(1));
+/// println!("{:?}", catalog.page(0));
+/// # }
 /// ```
 ///
 /// to get all threads from catalog
@@ -120,7 +123,11 @@ impl Update for Catalog {
 
         Ok(updated_catalog)
     }
+}
 
+#[async_trait(?Send)]
+impl Procedures for Catalog {
+    type Output = Self;
     /// Refreshes the time in the `Thread` instance.
     /// also handles the sleep of the thread update.
     ///
@@ -233,18 +240,8 @@ impl Catalog {
 }
 
 /// Contains some metadata about the thread.
-///
-/// # Example
-///
-/// ```ignore
-/// use dot4ch::threadlist::CatalogThread;
-///
-/// let thread = CatalogThread::default();
-///
-/// // The empty Catalog thread
-/// let thread_2 = CatalogThread { no: 0, last_modified: 0, replies: 0 };
-///
-/// ```
+/// 
+/// Usually used in the context of a [`Page`]
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Clone, Copy)]
 pub struct CatalogThread {
     /// The OP ID of a thread

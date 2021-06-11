@@ -1,7 +1,7 @@
 //! Contains information about a 4chan thread.
 //!
 
-use crate::{Dot4chClient, IfModifiedSince, Update};
+use crate::{Dot4chClient, IfModifiedSince, Procedures, Update, board::Board};
 use async_trait::async_trait;
 
 use super::{post::Post, Result};
@@ -9,7 +9,10 @@ use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use log::debug;
 use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
+use std::{
+    collections::HashMap,
+    fmt::{Display, Formatter},
+};
 use tokio::time;
 
 /// The main end user interface to the 4chan thread API.
@@ -111,7 +114,11 @@ impl Update for Thread {
         updated_thread.client.lock().await.last_checked = Utc::now();
         Ok(updated_thread)
     }
+}
 
+#[async_trait(?Send)]
+impl Procedures for Thread {
+    type Output = Self;
     async fn refresh_time(&mut self) -> Result<()> {
         if let Some(time) = self.last_update {
             let curr = Utc::now().signed_duration_since(time);
@@ -256,6 +263,21 @@ impl Thread {
             self.board,
             self.op().id()
         )
+    }
+
+
+    /// Convert one [`Thread`] to a [`Board`]
+    pub fn into_board(self) -> Board {
+        let mut hash = HashMap::new();
+        let num = &self.op.id();
+        let client = self.client.clone();
+        let board = self.board.to_string();
+        hash.insert(*num, self);
+        Board {
+            threads: hash,
+            board,
+            client,
+        }
     }
 }
 

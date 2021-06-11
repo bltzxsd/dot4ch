@@ -14,18 +14,24 @@
 //!
 //! ## Example: Getting an image from the OP of a thread
 //!
-//! ```ignore
-//! #[tokio::main]
+//! ```
+//! ##[tokio::main]
 //! async fn main() {
 //!     use dot4ch::{Client, thread::Thread};
+//!     
+//!     // Making a client.
 //!     let mut client = Client::new();
-//!
+//!     
+//!     // Building a board.
 //!     let board = "g";
 //!
-//!     let post_id = 81743559_u32;
+//!     // Getting a specific `Thread` from the board.
+//!     let post_id = 76759434;
 //!
+//!     // Fetching a new thread.
 //!     let thread = Thread::new(&client, board, post_id).await.unwrap();
 //!     
+//!     // Getting the OP of the thread.
 //!     let post = thread.op();
 //!     println!("{}", post.image_url(board).unwrap());
 //! }
@@ -74,7 +80,8 @@
 #![allow(
     clippy::missing_const_for_fn,
     clippy::must_use_candidate,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    clippy::clippy::struct_excessive_bools
 )]
 
 use async_trait::async_trait;
@@ -188,18 +195,39 @@ pub trait IfModifiedSince {
 ///
 /// By default, only Threads, Catalogs, and Boards can be updated.
 ///
-/// # Example
-/// ```ignore
-/// use async_trait::async_trait;
-/// use dot4ch::Update;
-/// type Result<T> = anyhow::Result<T>;
+/// # Usecase Example
+/// ```
+/// use dot4ch::{Client, thread::Thread, Update};
 ///
-/// type Client = std::sync::Arc<tokio::sync::Mutex<dot4ch::Client>>;
+/// # async fn update_usecase() {
+/// # let client = Client::new();
+/// // Assume we have a client.
+///
+/// let thread = Thread::new(&client, "g", 76759434).await.unwrap();
+///
+/// /* --- do some work with the thread */
+///
+/// // time to update
+/// let thread = thread.update().await.unwrap();
+/// 
+/// println!("{}", thread);
+/// # }
+/// ```
+///
+/// # Implementation Example
+/// ```
+/// # use async_trait::async_trait;
+/// # use dot4ch::Update;
+/// # use std::error::Error;
+/// # type Result<T> = anyhow::Result<T>;
+/// # type Client = std::sync::Arc<tokio::sync::Mutex<dot4ch::Client>>;
 /// struct Something { pub stuff: i32 }
 ///
 /// #[async_trait(?Send)]
 /// impl Update for Something {
 ///     type Output = i32;
+///     
+///     // I will be using [`anyhow`] for error handling
 ///     async fn update(mut self) -> Result<Self::Output> {
 ///         let out = self.stuff + 32;
 ///         Ok(out)
@@ -212,6 +240,12 @@ pub trait Update {
     type Output;
     /// Returns the updated `self` type.
     async fn update(mut self) -> Result<Self::Output>;
+}
+
+#[async_trait(?Send)]
+pub(crate) trait Procedures {
+    // The Output of the impl
+    type Output;
 
     /// Refreshes the last time the thread was accessed.
     async fn refresh_time(&mut self) -> Result<()>;

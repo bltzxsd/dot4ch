@@ -11,20 +11,22 @@
 //! It is recommended to update a board in intervals of no less than than 10 minutes.
 //!
 //! # Example: Building a board and updating it
-//! ```ignore
-//! use dot4ch::{Client, Update, board::Board};
-//!
-//! // Making a client
+//! ```rust
+//! # use dot4ch::{Client, Update, board::Board};
+//! # async fn something() -> Result<(()), anyhow::Error> {
+//! # // Making a client
 //! let client = Client::new();
 //!
 //! // Building the /g/ board
-//! let board = Board::build(&client, "g").await.unwrap();
+//! let board = Board::build(&client, "g").await?;
 //!
 //! /* Do something with the board */
 //!
 //! // After a long interval, we update it.
-//! let g = board.update().await.unwrap();
+//! let g = board.update().await?;
 //! println!("{:#?}", g);
+//! # Ok(())
+//! # }
 //! ```
 
 use crate::{thread::Thread, threadlist::Catalog, Dot4chClient, Update};
@@ -42,9 +44,9 @@ pub struct Board {
     /// A HashMap of Thread and their ID's
     pub threads: HashMap<u32, Thread>,
     /// The board on this instance of board is based.
-    board: String,
+    pub(crate) board: String,
     /// the client
-    client: Dot4chClient,
+    pub(crate) client: Dot4chClient,
 }
 
 impl Board {
@@ -152,41 +154,5 @@ impl Update for Board {
             board: self.board,
             client: self.client,
         })
-    }
-
-    /// This is an unimplemented function that WILL panic.
-    ///
-    /// # Do NOT call this function
-    /// Since the `Board` is a fancy hashmap all its threads individually,
-    /// it uses the update functions on each threads.
-    /// which DO implement this method.
-    ///
-    /// Therefore, this does not need to be implemented.
-    async fn refresh_time(&mut self) -> crate::Result<()> {
-        panic!("Called unusable function!")
-    }
-
-    /// This is an unimplemented function that WILL panic.
-    ///
-    /// # Do NOT call this function
-    /// Since the `Board` is a fancy hashmap all its threads individually,
-    /// it uses the update functions on each threads.
-    /// which DO implement this method.
-    ///
-    /// Therefore, this does not need to be implemented.
-    async fn fetch_status(mut self, _: reqwest::Response) -> crate::Result<Self::Output> {
-        panic!("Called unusable function!")
-    }
-
-    /// This is an unimplemented function that WILL panic.
-    ///
-    /// # Do NOT call this function
-    /// Since the `Board` is a fancy hashmap all its threads individually,
-    /// it uses the update functions on each threads.
-    /// which DO implement this method.
-    ///
-    /// Therefore, this does not need to be implemented.
-    async fn into_upper(self, _: reqwest::Response) -> crate::Result<Self::Output> {
-        panic!()
     }
 }
