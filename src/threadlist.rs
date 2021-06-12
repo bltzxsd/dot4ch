@@ -15,13 +15,17 @@
 //! - The number of replies a thread has
 //!
 
-use crate::{header, Dot4chClient, IfModifiedSince, Procedures, Update};
+use crate::{header, thread::Thread, Dot4chClient, IfModifiedSince, Procedures, Update};
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use log::debug;
 use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
-use std::fmt::{self, Display, Formatter};
+use std::{
+    fmt::{self, Display, Formatter},
+    ops::Index,
+    slice::SliceIndex,
+};
 use tokio::time;
 
 /// A summarized list of all threads on a board including
@@ -54,7 +58,7 @@ pub struct Catalog {
     client: Dot4chClient,
 }
 
-#[derive(Debug, Deserialize, Serialize, Default)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone)]
 /// A Page in the catalog.
 /// Pages contain their own number and a vector or `CatalogThreads`
 ///
@@ -87,6 +91,17 @@ impl Display for Catalog {
             self.threads.iter().map(Page::to_string).collect::<String>()
         );
         write!(f, "{}", fmt)
+    }
+}
+
+impl<Idx> Index<Idx> for Catalog
+where
+    Idx: SliceIndex<[Page]>,
+{
+    type Output = Idx::Output;
+
+    fn index(&self, index: Idx) -> &Self::Output {
+        &self.threads[index]
     }
 }
 
@@ -287,6 +302,17 @@ impl Display for CatalogThread {
             self.no, g, self.replies
         );
         write!(f, "{}", fmt)
+    }
+}
+
+impl<Idx> Index<Idx> for Page
+where
+    Idx: SliceIndex<[CatalogThread]>,
+{
+    type Output = Idx::Output;
+
+    fn index(&self, index: Idx) -> &Self::Output {
+        &self.threads[index]
     }
 }
 
