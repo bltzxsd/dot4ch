@@ -178,8 +178,8 @@ impl Procedures for Thread {
 }
 
 impl Thread {
-    /// Get the data from `DeserializedThread` struct
-    /// and convert it to a `Thread`.
+    /// Get the data from [`DeserializedThread`] struct
+    /// and convert it to a [`Thread`].
     ///
     /// **Requires the Board to be a valid 4chan board
     /// and the Post ID to be a valid 4chan OP Post ID.**
@@ -230,25 +230,12 @@ impl Thread {
         &self.op
     }
 
-    /// Returns a reference to a post from a thread depending on argument.
-    ///
-    /// Returns `None` if it does not exist.
-    /// Returns a reference to the thread depending on argument.
-    ///
-    /// Uses the `get()` method on `Vec`.
-    ///
-    /// - Returns `None` if the provided index is out of bounds.
-    /// - Returns a single element if a single index is provided.
-    /// - Returns a slice of elements if a range is provided.
-    #[cfg(feature = "unstable")]
-    pub fn get_range<T: Iterator + IntoIterator>(&self, index: Range<T>) -> Option<&[Post]> {
-        self.all_replies.get(index)
-    }
-
     /// Returns a reference to a post from a thread
     ///
-    /// Returns `None` if it does not exist.
+    /// Returns [`None`] if it does not exist.
     /// Returns a reference to the thread
+    // #[deprecated(since = "2.0.3", note = "Please slice threads directly.")]
+    #[cfg(feature = "unstable")]
     pub fn get(&self, idx: usize) -> Option<&Post> {
         self.all_replies.get(idx)
     }
@@ -258,7 +245,7 @@ impl Thread {
         self.all_replies.last()
     }
 
-    /// Return the current board
+    /// Return the name of the board
     pub fn board(&self) -> &str {
         &self.board
     }
@@ -271,7 +258,6 @@ impl Thread {
             self.op().id()
         )
     }
-
 
     /// Convert one [`Thread`] to a [`Board`]
     pub fn into_board(self) -> Board {
@@ -310,13 +296,13 @@ struct DeserializedThread {
     posts: Vec<Post>,
 }
 
-/// Converts 4chan thread JSON to `DeserializedThread`.
+/// Converts 4chan thread JSON to [`DeserializedThread`].
 ///
 /// This is a helper function to `from_deserialized()`
 ///
 /// # Errors
 ///
-/// Throws an error if the given thread is not found
+/// Returns an error if the given thread is not found
 async fn thread_deserializer(
     client: &Dot4chClient,
     board: &str,
