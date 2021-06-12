@@ -1,7 +1,12 @@
 //! Contains information about a 4chan thread.
 //!
+//! This is documented as `thread.json` in the
+//! [4chan API Repository](<https://github.com/4chan/4chan-API/blob/master/pages/Threads.md>)
+//!
+//! This contains all the replies from the given thread.
+//!
 
-use crate::{Dot4chClient, IfModifiedSince, Procedures, Update, board::Board};
+use crate::{board::Board, Dot4chClient, IfModifiedSince, Procedures, Update};
 use async_trait::async_trait;
 
 use super::{post::Post, Result};
@@ -12,6 +17,8 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fmt::{Display, Formatter},
+    ops::Index,
+    slice::SliceIndex,
 };
 use tokio::time;
 
@@ -278,6 +285,17 @@ impl Thread {
             board,
             client,
         }
+    }
+}
+
+impl<Idx> Index<Idx> for Thread
+where
+    Idx: SliceIndex<[Post]>,
+{
+    type Output = Idx::Output;
+
+    fn index(&self, index: Idx) -> &Self::Output {
+        &self.all_replies[index]
     }
 }
 
