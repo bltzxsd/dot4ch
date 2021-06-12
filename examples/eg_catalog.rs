@@ -18,6 +18,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // I suggest you check out the fmt::Display impl on threadlist::Catalog
     println!("{}", g);
 
+    // You can also get a slice of Pages in from the Catalog.
+    println!("{:#?}", &g[..]);
+
+    // take ownership of the first page
+    let page = g[0].to_owned();
+
+    // we can also convert all CatalogThreads to actual threads.
+    for cat_thread in page.threads() {
+        let common_thread = cat_thread.to_thread(&client, "g").await?;
+        println!("{}", common_thread);
+    }
+
     // Okay, now that some time has passed we want to update the catalog.
     let g = g.update().await?;
 
