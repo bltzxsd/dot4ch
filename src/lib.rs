@@ -6,16 +6,17 @@
 //! - Posts
 //! - Threads
 //! - Catalog
+//! - Boards
 //!
 //! While respecting 4chan's:  
 //! - GET 1 second-per-request cooldown.
 //! - `If-Modified-Since` headers with update requests.
-//! - 10 second cooldown with `Thread`, `Catalog` and `Board` update requests.
+//! - 10 second cooldown with [`Thread`], [`Catalog`] and [`Board`] update requests.
 //!
 //! ## Example: Getting an image from the OP of a thread
 //!
 //! ```
-//! ##[tokio::main]
+//! #[tokio::main]
 //! async fn main() {
 //!     use dot4ch::{Client, thread::Thread};
 //!     
@@ -179,11 +180,11 @@ pub(crate) async fn header(client: &Dot4chClient) -> String {
     )
 }
 
-#[doc(hidden)]
-#[async_trait(?Send)]
 /// Helper trait that sends a GET request from the reqwest client
 /// with a If-Modified-Since header.
+#[async_trait(?Send)]
 pub trait IfModifiedSince {
+    /// Fetches the given URL with an `If-Modifed-Since` header.
     async fn fetch(
         client: &Dot4chClient,
         url: &str,
@@ -200,8 +201,7 @@ pub trait IfModifiedSince {
 /// use dot4ch::{Client, thread::Thread, Update};
 ///
 /// # async fn update_usecase() {
-/// # let client = Client::new();
-/// // Assume we have a client.
+/// let client = Client::new();
 ///
 /// let thread = Thread::new(&client, "g", 76759434).await.unwrap();
 ///
@@ -209,7 +209,7 @@ pub trait IfModifiedSince {
 ///
 /// // time to update
 /// let thread = thread.update().await.unwrap();
-/// 
+///
 /// println!("{}", thread);
 /// # }
 /// ```
@@ -219,20 +219,29 @@ pub trait IfModifiedSince {
 /// # use async_trait::async_trait;
 /// # use dot4ch::Update;
 /// # use std::error::Error;
-/// # type Result<T> = anyhow::Result<T>;
-/// # type Client = std::sync::Arc<tokio::sync::Mutex<dot4ch::Client>>;
-/// struct Something { pub stuff: i32 }
-///
+/// type Result<T> = anyhow::Result<T>;
+/// ##[derive(Debug, Clone, Copy)]
+/// struct Something(i32);
+
 /// #[async_trait(?Send)]
+/// // ^^^^^^^^^^^^^^^^^ This is needed since the `update` function is `async`.
 /// impl Update for Something {
-///     type Output = i32;
+///     // the output this trait should produce
+///     type Output = ();
 ///     
-///     // I will be using [`anyhow`] for error handling
+///     // I will be using `anyhow` for error handling
 ///     async fn update(mut self) -> Result<Self::Output> {
-///         let out = self.stuff + 32;
-///         Ok(out)
+///         self.0 += 32;
+///         Ok(())
 ///     }
 /// }
+///
+/// // Checking if it actually works:
+/// # fn update_test() {
+/// let mut x = Something(21);
+/// x.update();
+/// assert_eq!(x.0, 53);
+/// # }
 /// ```
 #[async_trait(?Send)]
 pub trait Update {
@@ -242,18 +251,19 @@ pub trait Update {
     async fn update(mut self) -> Result<Self::Output>;
 }
 
+/// Private helper trait for the [`Update`] trait.
 #[async_trait(?Send)]
 pub(crate) trait Procedures {
-    // The Output of the impl
+    /// The Output type.
     type Output;
 
     /// Refreshes the last time the thread was accessed.
     async fn refresh_time(&mut self) -> Result<()>;
 
-    /// Matches the `Self` 's status code to see if it has been updated,
+    /// Matches the `Self` 's status code to see if it has been updated.
     async fn fetch_status(mut self, response: Response) -> Result<Self::Output>;
 
-    /// Converts a `Response` into a concrete object.
+    /// Converts a [`Response`] into a concrete object.
     async fn into_upper(self, response: Response) -> Result<Self::Output>;
 }
 

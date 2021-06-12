@@ -2,7 +2,7 @@
 //!
 //! Some of the fields here are optional
 //!
-//! Posts are usually used in `Thread`s which is why they do not have a `new()` but they do have an `Default` implementation.
+//! Posts are usually used in [`Thread`]s which is why they do not have a `new()` but they do have an [`Default`] implementation.
 //!
 //! ## 4chan API:
 //! /<board>/<thread>/<op ID>.json files are a representation of a single OP and all the replies, which form a thread.

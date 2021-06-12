@@ -1,8 +1,8 @@
 //! A cache of the entire board.
 //!
-//! The `Board` is a comprehensive list of all threads and posts on a board.
+//! The [`Board`] is a comprehensive collection of all threads and posts on a board.
 //!
-//! Please rely on updating induidual threads if you do not need *all* posts from a thead.
+//! Please rely on updating individual [`Thread`]s you do not need *all* posts from a thread.
 //!
 //! # Time
 //!
@@ -39,7 +39,7 @@ use std::{
 };
 
 #[derive(Debug)]
-/// Holds an abstraction over `HashMap<u32, Thread>` which can be used to any post with a Post number.
+/// Holds an abstraction over [`HashMap<u32, Thread>`].
 pub struct Board {
     /// A HashMap of Thread and their ID's
     pub threads: HashMap<u32, Thread>,
@@ -50,9 +50,7 @@ pub struct Board {
 }
 
 impl Board {
-    /// Returns an entire board containing *all* of its posts at one point.
-    ///
-    /// This is an expensive one time operation.
+    /// Returns an entire board containing *all* of it's posts.
     ///
     /// # Time
     ///
@@ -62,7 +60,7 @@ impl Board {
     ///
     /// # Errors
     ///
-    /// This function will return an error if request to get a new `Catalog` fails.
+    /// This function will return an error if the request to get a new [`Catalog`] fails.
     pub async fn build(client: &Dot4chClient, board: &str) -> crate::Result<Self> {
         writeln!(io::stdout(), "Building Board! Please wait.")?;
         let catalog = Catalog::new(client, board).await?;
