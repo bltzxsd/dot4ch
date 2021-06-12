@@ -6,7 +6,7 @@
 //! However it contains pretty much the same level of information from the
 //! [4chan-API/Catalog](<https://github.com/4chan/4chan-API/blob/master/pages/Catalog.md>)
 //!
-//! Except recent replies, which can already be accessed by `Thread` and `Post`'s
+//! Except recent replies, which can already be accessed by [`Thread`] and [`Post`]'s
 //! functionality.
 //! The `threads.json` file is a comprehensive list of all threads that contains:
 //! - The thread OP number
@@ -240,7 +240,7 @@ impl Catalog {
 }
 
 /// Contains some metadata about the thread.
-/// 
+///
 /// Usually used in the context of a [`Page`]
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq, Clone, Copy)]
 pub struct CatalogThread {
@@ -267,6 +267,15 @@ impl CatalogThread {
     /// Returns the number of replies in a thread.
     pub fn replies(&self) -> u32 {
         self.replies
+    }
+
+    /// Convert a [`CatalogThread`] into a [`Thread`]
+    ///
+    /// # Errors
+    ///
+    /// This function will fail if the request to fetch the [`Thread`] fails.
+    pub async fn to_thread(self, client: &Dot4chClient, board: &str) -> anyhow::Result<Thread> {
+        Ok(Thread::new(client, board, self.no).await?)
     }
 }
 
