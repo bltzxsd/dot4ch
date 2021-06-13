@@ -1,4 +1,5 @@
 //! # dot4ch
+
 //!
 //! dot4ch is a convenient wrapper library around 4chan's API.
 //!
@@ -11,7 +12,7 @@
 //! While respecting 4chan's:  
 //! - GET 1 second-per-request cooldown.
 //! - `If-Modified-Since` headers with update requests.
-//! - 10 second cooldown with [`Thread`], [`Catalog`] and [`Board`] update requests.
+//! - 10 second cooldown with [`thread::Thread`], [`catalog::Catalog`] and [`board::Board`] update requests.
 //!
 //! ## Example: Getting an image from the OP of a thread
 //!
@@ -38,6 +39,8 @@
 //! }
 //! ```
 
+
+
 #![deny(
     anonymous_parameters,
     clippy::all,
@@ -53,6 +56,7 @@
     unsafe_code,
     unused_extern_crates
 )]
+
 #![warn(
     clippy::dbg_macro,
     clippy::decimal_literal_representation,
@@ -78,6 +82,7 @@
     clippy::redundant_pub_crate,
     clippy::wildcard_imports
 )]
+
 #![allow(
     clippy::missing_const_for_fn,
     clippy::must_use_candidate,
@@ -95,10 +100,19 @@ use tokio::{
     time::{sleep, Duration as TkDuration},
 };
 
-pub mod board;
-pub mod post;
 pub mod thread;
-pub mod threadlist;
+mod threadlist;
+pub mod post;
+pub mod board;
+
+/// The Catalog consists of the [`crate::threadlist::Catalog`] and [`crate::threadlist::CatalogThread`]s
+pub mod catalog {
+    pub use crate::threadlist::Catalog;
+    pub use crate::threadlist::CatalogThread;
+    pub use crate::threadlist::Page;
+}
+
+
 
 /// Crate result type
 pub(crate) type Result<T> = anyhow::Result<T>;
@@ -257,10 +271,10 @@ pub(crate) trait Procedures {
     /// The Output type.
     type Output;
 
-    /// Refreshes the last time the thread was accessed.
+    /// Refreshes the last time [`Self`]  was accessed.
     async fn refresh_time(&mut self) -> Result<()>;
 
-    /// Matches the `Self` 's status code to see if it has been updated.
+    /// Matches the [`Self`]'s status code to see if it has been updated.
     async fn fetch_status(mut self, response: Response) -> Result<Self::Output>;
 
     /// Converts a [`Response`] into a concrete object.
