@@ -35,7 +35,7 @@ use tokio::time;
 ///
 /// ```
 /// # async fn catalog_check() {
-/// # use dot4ch::{threadlist::Catalog, Client};
+/// # use dot4ch::{catalog::Catalog, Client};
 /// # let client = Client::new();
 /// let catalog = Catalog::new(&client, "g").await.unwrap();
 ///
