@@ -103,23 +103,21 @@ impl Update for Thread {
 
         self.refresh_time().await?;
 
-        let mut updated_thread = {
-            let header = crate::header(&self.client).await;
-            let response = Self::fetch(&self.client, &self.thread_url(), &header).await?;
-            self.client.lock().await.last_checked = Utc::now();
+        let header = crate::header(&self.client).await;
+        let response = Self::fetch(&self.client, &self.thread_url(), &header).await?;
+        self.client.lock().await.last_checked = Utc::now();
 
-            self.fetch_status(response).await?
-        };
+        let mut thread = self.fetch_status(response).await?;
 
-        updated_thread.update_time();
+        thread.update_time();
 
         debug!(
             "Changed last updated time to be: {:?}",
-            updated_thread.client.lock().await.last_checked
+            thread.client.lock().await.last_checked
         );
 
-        updated_thread.client.lock().await.last_checked = Utc::now();
-        Ok(updated_thread)
+        thread.client.lock().await.last_checked = Utc::now();
+        Ok(thread)
     }
 }
 
@@ -178,8 +176,7 @@ impl Procedures for Thread {
 }
 
 impl Thread {
-    /// Get the data from [`DeserializedThread`] struct
-    /// and convert it to a [`Thread`].
+    /// Create a new [`Thread`].
     ///
     /// **Requires the Board to be a valid 4chan board
     /// and the Post ID to be a valid 4chan OP Post ID.**
