@@ -1,4 +1,4 @@
-use dot4ch::{threadlist::Catalog, Client, Update};
+use dot4ch::{catalog::Catalog, Client, Update};
 use simple_logger::SimpleLogger;
 
 #[tokio::main]
