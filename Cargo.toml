@@ -1,6 +1,6 @@
 [package]
 name = "dot4ch"
-version = "2.0.2"
+version = "2.1.0"
 authors = ["b1tzxd <nth#8963>"]
 edition = "2018"
 description = "Wrapper library around 4chan API"
