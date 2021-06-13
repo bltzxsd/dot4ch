@@ -6,7 +6,7 @@
 //! However it contains pretty much the same level of information from the
 //! [4chan-API/Catalog](<https://github.com/4chan/4chan-API/blob/master/pages/Catalog.md>)
 //!
-//! Except recent replies, which can already be accessed by [`Thread`] and [`Post`]'s
+//! Except recent replies, which can already be accessed by [`Thread`] and [`crate::post::Post`]'s
 //! functionality.
 //! The `threads.json` file is a comprehensive list of all threads that contains:
 //! - The thread OP number
