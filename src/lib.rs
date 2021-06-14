@@ -265,9 +265,9 @@ pub trait Update {
     async fn update(mut self) -> Result<Self::Output>;
 }
 
-/// Private helper trait for the [`Update`] trait.
+/// Another helper trait for the [`Update`] trait.
 #[async_trait(?Send)]
-pub(crate) trait Procedures {
+pub trait Procedures {
     /// The Output type.
     type Output;
 
