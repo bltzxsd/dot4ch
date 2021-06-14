@@ -233,10 +233,10 @@ pub trait IfModifiedSince {
 /// # use async_trait::async_trait;
 /// # use dot4ch::Update;
 /// # use std::error::Error;
-/// type Result<T> = anyhow::Result<T>;
+/// # type Result<T> = anyhow::Result<T>;
 /// ##[derive(Debug, Clone, Copy)]
 /// struct Something(i32);
-
+///
 /// #[async_trait(?Send)]
 /// // ^^^^^^^^^^^^^^^^^ This is needed since the `update` function is `async`.
 /// impl Update for Something {
