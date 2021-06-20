@@ -6,9 +6,10 @@ dot4ch is a convenient wrapper library around 4chan's API.
 
 This library can fetch and update:
 
-- Posts
+- Posts (fetch only)
 - Threads
 - Boards
+- Catalogs
 
 While respecting 4chan's:
 
