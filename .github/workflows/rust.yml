@@ -20,9 +20,8 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
-    - name: Run clippy
-      run: cargo clippy
-
+      
+  
   build_windoze:
     runs-on: windows-latest
     steps:
@@ -33,5 +32,4 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
-    - name: Run clippy
-      run: cargo clippy
+
