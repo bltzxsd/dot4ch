@@ -32,8 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Get the OP
     println!("{}", sample_thread.op());
 
-    // Threads are sliceable! You can get a reference to the replies
-    // or replies in a thread!
+    // Threads are sliceable! You can get a reference to the replies from the thread!
     println!("{:?}", &sample_thread[..]);
     // Say we want to update the thread
     let _ = sample_thread.update().await?;
