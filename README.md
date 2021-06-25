@@ -2,6 +2,8 @@
 
 [![Rust](https://github.com/bltzxsd/dot4ch/actions/workflows/rust.yml/badge.svg)](https://github.com/bltzxsd/dot4ch/actions/workflows/rust.yml)
 [![](https://meritbadge.herokuapp.com/dot4ch)](https://crates.io/crates/dot4ch)
+
+
 dot4ch is a convenient wrapper library around 4chan's API.
 
 This library can fetch and update:
