@@ -39,59 +39,17 @@
 //! }
 //! ```
 
-
-
-#![deny(
-    anonymous_parameters,
-    clippy::all,
-    const_err,
-    illegal_floating_point_literal_pattern,
-    late_bound_lifetime_arguments,
-    path_statements,
-    patterns_in_fns_without_body,
-    rust_2018_idioms,
-    trivial_casts,
-    trivial_numeric_casts,
-    unreachable_pub,
-    unsafe_code,
-    unused_extern_crates
-)]
-
-#![warn(
-    clippy::dbg_macro,
-    clippy::decimal_literal_representation,
-    clippy::get_unwrap,
-    clippy::missing_docs_in_private_items,
-    clippy::pedantic,
-    clippy::print_stdout,
-    clippy::todo,
-    clippy::unimplemented,
-    clippy::unwrap_used,
-    clippy::use_debug,
-    missing_copy_implementations,
-    missing_debug_implementations,
-    unused_qualifications,
-    variant_size_differences,
-    clippy::cast_lossless,
-    clippy::cast_possible_truncation,
-    clippy::cast_possible_wrap,
-    clippy::cast_sign_loss,
-    clippy::enum_glob_use,
-    clippy::map_err_ignore,
-    clippy::missing_errors_doc,
-    clippy::redundant_pub_crate,
-    clippy::wildcard_imports
-)]
-
+// #![deny(anonymous_parameters, clippy::all, clippy::pedantic)]
 #![allow(
     clippy::missing_const_for_fn,
     clippy::must_use_candidate,
     clippy::cast_precision_loss,
-    clippy::clippy::struct_excessive_bools
+    clippy::struct_excessive_bools
 )]
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
+use crate::error::DotError;
 use log::{info, trace};
 use reqwest::Response;
 use std::sync::Arc;
@@ -100,22 +58,16 @@ use tokio::{
     time::{sleep, Duration as TkDuration},
 };
 
-pub mod thread;
-mod threadlist;
-pub mod post;
 pub mod board;
-
-/// The Catalog consists of the [`crate::threadlist::Catalog`] and [`crate::threadlist::CatalogThread`]s
-pub mod catalog {
-    pub use crate::threadlist::Catalog;
-    pub use crate::threadlist::CatalogThread;
-    pub use crate::threadlist::Page;
-}
-
-
+mod cat_thread;
+mod catalog;
+pub mod error;
+pub mod post;
+pub mod thread;
+pub use catalog::Catalog as Catalog;
 
 /// Crate result type
-pub(crate) type Result<T> = anyhow::Result<T>;
+pub(crate) type Result<T> = std::result::Result<T, DotError>;
 
 /// The main client for accessing API.
 /// Handles updates, board and `reqwest::Client`
@@ -126,7 +78,7 @@ pub struct Client {
     /// The reqwest client
     req_client: reqwest::Client,
     /// The last time a client was checked
-    pub last_checked: DateTime<Utc>,
+    pub(crate) last_checked: DateTime<Utc>,
 }
 
 impl Client {
@@ -138,7 +90,7 @@ impl Client {
         let req_client = reqwest::Client::new();
         let last_checked = Utc::now();
         let creation_time = last_checked;
-        info!("constructed chan client.");
+        info!("constructed client.");
         Arc::new(Mutex::new(Self {
             creation_time,
             req_client,
@@ -203,7 +155,7 @@ pub trait IfModifiedSince {
         client: &Dot4chClient,
         url: &str,
         header: &str,
-    ) -> std::result::Result<Response, reqwest::Error>;
+    ) -> Result<Response>;
 }
 
 /// Update trait specifies if something can be updated or not.
@@ -224,7 +176,7 @@ pub trait IfModifiedSince {
 /// // time to update
 /// let thread = thread.update().await.unwrap();
 ///
-/// println!("{}", thread);
+/// println!("{:?}", thread);
 /// # }
 /// ```
 ///
@@ -232,25 +184,22 @@ pub trait IfModifiedSince {
 /// ```
 /// # use async_trait::async_trait;
 /// # use dot4ch::Update;
-/// # use std::error::Error;
-/// # type Result<T> = anyhow::Result<T>;
-/// ##[derive(Debug, Clone, Copy)]
+/// # use dot4ch::error::DotError;
+/// # #[derive(Debug, Clone, Copy)]
 /// struct Something(i32);
 ///
-/// #[async_trait(?Send)]
-/// // ^^^^^^^^^^^^^^^^^ This is needed since the `update` function is `async`.
+/// # #[async_trait(?Send)]
 /// impl Update for Something {
 ///     // the output this trait should produce
 ///     type Output = ();
 ///     
-///     // I will be using `anyhow` for error handling
-///     async fn update(mut self) -> Result<Self::Output> {
+///     async fn update(mut self) -> Result<Self::Output, DotError> {
 ///         self.0 += 32;
 ///         Ok(())
 ///     }
 /// }
 ///
-/// // Checking if it actually works:
+/// 
 /// # fn update_test() {
 /// let mut x = Something(21);
 /// x.update();
@@ -261,8 +210,9 @@ pub trait IfModifiedSince {
 pub trait Update {
     /// The type of the output.
     type Output;
+
     /// Returns the updated `self` type.
-    async fn update(mut self) -> Result<Self::Output>;
+    async fn update(self) -> Result<Self::Output>;
 }
 
 /// Another helper trait for the [`Update`] trait.
@@ -275,10 +225,10 @@ pub trait Procedures {
     async fn refresh_time(&mut self) -> Result<()>;
 
     /// Matches the [`Self`]'s status code to see if it has been updated.
-    async fn fetch_status(mut self, response: Response) -> Result<Self::Output>;
+    async fn fetch_status(self, response: Response) -> Result<Self::Output>;
 
     /// Converts a [`Response`] into a concrete object.
-    async fn into_upper(self, response: Response) -> Result<Self::Output>;
+    async fn from_response(self, response: Response) -> Result<Self::Output>;
 }
 
 #[doc(hidden)]
@@ -288,18 +238,3 @@ pub trait Procedures {
 fn default<T: Default>() -> T {
     Default::default()
 }
-
-/*
-TODO: This function should have been implemented for (maybe something like a)
-Board, or any collection
-of threads, maybe turn this into trait?
-
-/// Returns a vector of all posts that contain the given subject
-pub fn find_subject(&self, subject: &str) -> Vec<&Post> {
-    self.all_replies
-        .iter()
-        .filter(|post| post.subject().contains(subject))
-        .collect::<Vec<_>>()
-}
-
-*/

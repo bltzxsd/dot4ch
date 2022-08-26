@@ -1,8 +1,8 @@
 [package]
 name = "dot4ch"
-version = "2.1.1"
-authors = ["b1tzxd <nth#8963>"]
-edition = "2018"
+version = "3.0.0"
+authors = ["b1tzxd"]
+edition = "2021"
 description = "Wrapper library around 4chan API"
 license = "GPL-3.0"
 repository = "https://github.com/bltzxsd/dot4ch"
@@ -12,17 +12,18 @@ keywords = ["4chan" , "api", "library", "wrapper"]
 
 [dependencies]
 
-reqwest = { version = "0.11.3", features = ["json"] }
-tokio = { version = "1.6.1", features = ["time", "sync", "rt-multi-thread", "macros"] }
-chrono = "0.4.19"
-serde = { version = "1.0.126", features = ["derive"]}
-log = "0.4.14"
-async-trait = "0.1.50"
-anyhow = "1.0.40"
+reqwest = { version = "0.11.11", features = ["json"] }
+tokio = { version = "1.20.1", features = ["time", "sync", "rt-multi-thread", "macros"] }
+chrono = "0.4.22"
+serde = { version = "1.0.144", features = ["derive"]}
+log = "0.4.17"
+async-trait = "0.1.57"
+thiserror = "1.0.32"
 
 [dev-dependencies]
-simple_logger = "1.11.0"
+simple_logger = "2.3.0"
+anyhow = "1.0.62"
 
-[workspace] 
-members = ["examples"]
-
+[features]
+display = []
+all = ["display"]

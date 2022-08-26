@@ -6,20 +6,14 @@
 //! This contains all the replies from the given thread.
 //!
 
-use crate::{board::Board, Dot4chClient, IfModifiedSince, Procedures, Update};
-use async_trait::async_trait;
-
 use super::{post::Post, Result};
+use crate::{board::Board, error::DotError, Dot4chClient, IfModifiedSince, Procedures, Update};
+use async_trait::async_trait;
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use log::debug;
 use reqwest::{header::IF_MODIFIED_SINCE, Response, StatusCode};
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    fmt::{Display, Formatter},
-    ops::Index,
-    slice::SliceIndex,
-};
+use std::collections::HashMap;
 use tokio::time;
 
 /// The main end user interface to the 4chan thread API.
@@ -47,6 +41,7 @@ pub struct Thread {
     client: Dot4chClient,
 }
 
+#[cfg(feature = "display")]
 impl Display for Thread {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let fmt = format!(
@@ -66,7 +61,7 @@ impl IfModifiedSince for Thread {
         client: &Dot4chClient,
         url: &str,
         header: &str,
-    ) -> std::result::Result<Response, reqwest::Error> {
+    ) -> Result<Response> {
         client
             .lock()
             .await
@@ -75,6 +70,7 @@ impl IfModifiedSince for Thread {
             .header(IF_MODIFIED_SINCE, header)
             .send()
             .await
+            .map_err(DotError::Reqwest)
     }
 }
 
@@ -87,18 +83,9 @@ impl Update for Thread {
     /// 4chan's 10 seconds between each chan thread call.
     async fn update(mut self) -> Result<Self> {
         if self.archived {
-            let archival_time = match self.archive_time {
-                // If-Modified-Since: Wed, 21 Oct 2015 07:28:00 GMT
-                // strftime fmt:      %a , %d %b  %Y   %T       GMT
-                Some(time) => time.format("%a, %d %b %Y %T"),
-                None => return Err(anyhow::anyhow!("Archival time was not found on thread.")),
-            };
-
-            return Err(anyhow::anyhow!(
-                "Thread: [{}] got archived at: {}",
-                self.op().id(),
-                archival_time
-            ));
+            let archival_time = self.archive_time.ok_or_else(|| DotError::Thread("cannot get archival time".to_string()))?;
+            let time = archival_time.format("%a, %d %b %Y %T").to_string();
+            return Err(DotError::Archived { time, thread: self.op().id()})
         }
 
         self.refresh_time().await?;
@@ -110,11 +97,6 @@ impl Update for Thread {
         let mut thread = self.fetch_status(response).await?;
 
         thread.update_time();
-
-        debug!(
-            "Changed last updated time to be: {:?}",
-            thread.client.lock().await.last_checked
-        );
 
         thread.client.lock().await.last_checked = Utc::now();
         Ok(thread)
@@ -128,33 +110,40 @@ impl Procedures for Thread {
         if let Some(time) = self.last_update {
             let curr = Utc::now().signed_duration_since(time);
             if curr < Duration::seconds(10) {
+                let remaining = 10 - curr.num_seconds();
                 debug!(
                     "Updating Thread too quickly! Waiting for {} seconds",
-                    10000_f32 - curr.num_milliseconds() as f32 / 1000_f32
+                    remaining
                 );
-                match Duration::seconds(10).checked_sub(&curr) {
-                    Some(time) => time::sleep(time.to_std()?).await,
-                    None => return Err(anyhow::anyhow!("Overflow in subtraction of `Duration`s")),
+
+                // None check can be bypassed since 10 - curr will usually always be a Some value.
+                if let Some(time) = Duration::seconds(10).checked_sub(&curr) {
+                    time::sleep(
+                        time.to_std()
+                            .expect("could not change chrono time to stdtime"),
+                    )
+                    .await;
                 }
             }
         };
         Ok(())
     }
 
-    /// Checks the status of a `Response and generates a new thread if needed.`
-    async fn fetch_status(mut self, response: Response) -> Result<Thread> {
+    /// Checks the status of a [`Response`] and generates a new thread if needed.
+    async fn fetch_status(self, response: Response) -> crate::Result<Self::Output> {
         match response.status() {
-            StatusCode::OK => self.into_upper(response).await,
+            StatusCode::OK => return self.from_response(response).await,
             StatusCode::NOT_MODIFIED => {
-                self.last_update = Some(Utc::now());
-                Ok(self)
+                let mut thread = self;
+                thread.last_update = Some(Utc::now());
+                return Ok(thread);
             }
-            other_resp => return Err(anyhow::anyhow!("Unexpected StatusCode {}", other_resp)),
+            other_resp => return Err(DotError::Update(format!("unexpected response code {}", other_resp)))?,
         }
     }
 
     /// Converts the `Response` into a `Thread`
-    async fn into_upper(self, response: Response) -> Result<Self::Output> {
+    async fn from_response(self, response: Response) -> crate::Result<Self::Output> {
         // Note: into json is ok here since StatusCode is OK
         // and any further errors will be from Parsing JSON
         let thread_data = response.json::<DeserializedThread>().await?.posts;
@@ -227,19 +216,19 @@ impl Thread {
         &self.op
     }
 
-    /// Returns a reference to a post from a thread
-    ///
-    /// Returns [`None`] if it does not exist.
-    /// Returns a reference to the thread
-    // #[deprecated(since = "2.0.3", note = "Please slice threads directly.")]
-    #[cfg(feature = "unstable")]
-    pub fn get(&self, idx: usize) -> Option<&Post> {
-        self.all_replies.get(idx)
-    }
-
     /// Return the last post from a thread
     pub fn last_post(&self) -> Option<&Post> {
         self.all_replies.last()
+    }
+
+    /// Return the ID of the last reply
+    pub fn last_reply(&self) -> Option<u32> {
+        self.last_reply
+    }
+
+    /// Return the number of replies 
+    pub fn replies_no(&self) -> usize {
+        self.replies_no
     }
 
     /// Return the name of the board
@@ -271,9 +260,24 @@ impl Thread {
     }
 }
 
-impl<Idx> Index<Idx> for Thread
+impl From<Thread> for Board {
+    fn from(thread: Thread) -> Self {
+        let mut hash = HashMap::new();
+        let num = thread.op.id();
+        let client = thread.client.clone();
+        let board = thread.board().to_string();
+        hash.insert(num, thread);
+        Board {
+            threads: hash,
+            board,
+            client,
+        }
+    }
+}
+
+impl<Idx> std::ops::Index<Idx> for Thread
 where
-    Idx: SliceIndex<[Post]>,
+    Idx: std::slice::SliceIndex<[Post]>,
 {
     type Output = Idx::Output;
 
@@ -308,7 +312,7 @@ async fn thread_deserializer(
     let rq = format!("https://a.4cdn.org/{}/thread/{}.json", board, post_num);
     let req = client.lock().await.get(&rq).await?;
 
-    req.error_for_status_ref().map_err(anyhow::Error::from)?;
+    req.error_for_status_ref()?;
 
     let req = req.json::<DeserializedThread>().await?;
     debug!("Deserialized Post: {}", post_num);

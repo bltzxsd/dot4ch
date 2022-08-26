@@ -1,4 +1,4 @@
-use dot4ch::{catalog::Catalog, Client, Update};
+use dot4ch::{Catalog, Client, Update};
 use simple_logger::SimpleLogger;
 
 #[tokio::main]
@@ -16,25 +16,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // You can directly print the catalog.
     // For more information on what's printed,
     // I suggest you check out the fmt::Display impl on threadlist::Catalog
-    println!("{}", g);
+    println!("{:?}", g);
 
     // You can also get a slice of Pages in from the Catalog.
-    println!("{:#?}", &g[..]);
+    println!("{:#?}", &g[..5]);
 
-    // take ownership of the first page
+    // get the the first page
     let page = g[0].to_owned();
 
     // we can also convert all CatalogThreads to actual threads.
     for cat_thread in page.threads() {
         let common_thread = cat_thread.to_thread(&client, "g").await?;
-        println!("{}", common_thread);
+        println!("{:?}", common_thread);
     }
 
     // Okay, now that some time has passed we want to update the catalog.
     let g = g.update().await?;
 
     // and print that
-    println!("{}", g);
+    println!("{:?}", &g);
 
     Ok(())
 }

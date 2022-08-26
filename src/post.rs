@@ -19,7 +19,6 @@
 
 use crate::default;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
 
 /// The Post represents a derserialized post from a thread.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -338,8 +337,12 @@ impl Post {
     }
 }
 
+#[cfg(features = "display")]
 impl Display for Post {
+
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        use std::fmt::{Display, Formatter};
+
         let status = format!("Archived: {} | Closed: {}", self.archived(), self.closed());
         let fmt = format!(
             "Post ID: {}, Status: {}\n Subject: {}\n Content: {}\n",

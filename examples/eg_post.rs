@@ -10,7 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let post = Post::default();
 
     // Lets print the post.
-    println!("{}", &post);
+    println!("{:?}", &post);
 
     // lets say we only want to get the post's ID
     let id = post.id();

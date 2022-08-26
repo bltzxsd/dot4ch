@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // We can find any post in this thread by its id
     println!(
-        "{}",
+        "{:?}",
         sample_thread
             .find(81730461_u32)
             .expect("Could not find a post by that ID")
@@ -30,13 +30,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", sample_thread.thread_url());
 
     // Get the OP
-    println!("{}", sample_thread.op());
+    println!("{:?}", sample_thread.op());
 
     // Threads are sliceable! You can get a reference to the replies from the thread!
     println!("{:?}", &sample_thread[..]);
     // Say we want to update the thread
     let _ = sample_thread.update().await?;
     // This will either return a 304 Not Modified with our thread or a 200 OK with an updated thread.
+    // or a 404 error if it is not 
 
     Ok(())
 }

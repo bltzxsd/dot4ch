@@ -29,7 +29,7 @@
 //! # }
 //! ```
 
-use crate::{thread::Thread, threadlist::Catalog, Dot4chClient, Update};
+use crate::{cat_thread::Page, catalog::Catalog, thread::Thread, Dot4chClient, Update, Result};
 use async_trait::async_trait;
 use log::info;
 
@@ -41,7 +41,7 @@ use std::{
 #[derive(Debug)]
 /// Holds an abstraction over [`HashMap<u32, Thread>`].
 pub struct Board {
-    /// A HashMap of Thread and their ID's
+    /// A HashMap of [`Thread`] and their ID's
     pub threads: HashMap<u32, Thread>,
     /// The board on this instance of board is based.
     pub(crate) board: String,
@@ -54,20 +54,20 @@ impl Board {
     ///
     /// # Time
     ///
-    /// A typical board of ~150 threads takes 5+ minutes to cache.
+    /// A typical board of ~150 threads and takes quite a bit of 
     ///
     /// It is advised to build this only once due to its long wait times caused by API cooldowns.
     ///
     /// # Errors
     ///
     /// This function will return an error if the request to get a new [`Catalog`] fails.
-    pub async fn build(client: &Dot4chClient, board: &str) -> crate::Result<Self> {
+    pub async fn build(client: &Dot4chClient, board: &str) -> Result<Board> {
         writeln!(io::stdout(), "Building Board! Please wait.")?;
         let catalog = Catalog::new(client, board).await?;
         let ids: Vec<_> = catalog
             .all_pages()
             .into_iter()
-            .flat_map(crate::threadlist::Page::threads)
+            .flat_map(Page::threads)
             .map(|thread| thread.id())
             .collect();
 
@@ -75,7 +75,7 @@ impl Board {
         let mut threads = vec![];
         for (idx, id) in ids.iter().enumerate() {
             threads.push(Thread::new(client, board, *id).await?);
-            info!("Pushed Thread: {}/{}", idx + 1, ids.len())
+            info!("Pushed Thread: {}/{}", idx + 1, ids.len());
         }
 
         let threads: Vec<_> = threads.into_iter().zip(ids).collect();
@@ -112,20 +112,22 @@ impl Board {
 #[async_trait(?Send)]
 impl Update for Board {
     type Output = Self;
-    /// Returns an updated board.
+    /// Returns an updated board and adds any new threads found on the Catalog.
+    ///
     ///
     /// It is recommended to call this infrequently due to API calls having cooldowns.
     ///
     /// Uses `If-Modified-Since` header internally.
-    async fn update(mut self) -> crate::Result<Self::Output> {
+    async fn update(mut self) -> Result<Self::Output> {
         // get the ID's of all the threads we need
         // we have to call this again because there might be new thread that need to be added.
-        writeln!(io::stdout(), "Updating Board. Please wait..")?;
+        info!("Updating Board. Please wait..");
         let catalog = Catalog::new(&self.client, &self.board).await?;
+
         let ids: Vec<_> = catalog
             .all_pages()
             .into_iter()
-            .flat_map(crate::threadlist::Page::threads)
+            .flat_map(Page::threads)
             .map(|thread| thread.id())
             .collect();
 
@@ -146,7 +148,7 @@ impl Update for Board {
         for (thread, num) in threads {
             id_thread_zip.insert(num, thread);
         }
-        writeln!(io::stdout(), "Finished updating threads!")?;
+        info!("Finished updating threads!");
         Ok(Self {
             threads: id_thread_zip,
             board: self.board,
