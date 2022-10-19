@@ -23,8 +23,3 @@ The `tokio` crate only requires this feature in a binary/build:
 
 - `rt-multi-thread`
 - `macros`
-
-## Questions
-
-If you have any questions that you would like to ask,
-feel free to open a PR.
