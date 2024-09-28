@@ -43,7 +43,7 @@ impl CatalogThread {
     }
 }
 
-#[cfg(feature = "cat_thread_display")]
+#[cfg(feature = "display")]
 impl Display for CatalogThread {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let g = chrono::NaiveDateTime::from_timestamp(self.last_modified, 0);
@@ -79,7 +79,7 @@ impl Page {
     }
 }
 
-#[cfg(feature = "page_display")]
+#[cfg(feature = "display")]
 impl Display for Page {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let fmt = format!(

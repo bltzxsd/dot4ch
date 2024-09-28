@@ -337,9 +337,8 @@ impl Post {
     }
 }
 
-#[cfg(features = "display")]
+#[cfg(feature = "display")]
 impl Display for Post {
-
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         use std::fmt::{Display, Formatter};
 
