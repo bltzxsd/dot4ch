@@ -7,23 +7,21 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1.20.1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.40.0", features = ["rt-multi-thread", "macros"] }
 dot4ch = { path = "../" }
-simple_logger = "2.3.0" 
-
 
 [[example]]
 name = "board"
-path = "eg_board.rs"
+path = "board.rs"
 
 [[example]]
 name = "catalog"
-path = "eg_catalog.rs"
-
-[[example]]
-name = "post"
-path = "eg_post.rs"
+path = "catalog.rs"
 
 [[example]]
 name = "thread"
-path = "eg_thread.rs"
+path = "thread.rs"
+
+[[example]]
+name = "archive"
+path = "archive.rs"
