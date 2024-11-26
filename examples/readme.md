@@ -9,28 +9,28 @@ This directory contains example implementations demonstrating various features o
 ## Examples
 
 ### 1. Thread Example (`thread.rs`)
-Demonstrates fetching and updating a specific thread from the "/po/" (Papercraft) board.
+
 - Creates a client
 - Fetches a specific thread by board and thread number
 - Updates the thread
 - Prints the original post (OP) comment
 
 ### 2. Catalog Example (`catalog.rs`)
-Shows how to interact with a board's catalog.
+
 - Creates a client
 - Fetches the catalog for the "/po/" board
 - Updates the catalog
 - Prints the comment from the first thread on the first page
 
 ### 3. Thread List Example (`threadlist.rs`)
-Illustrates retrieving a list of threads from a board.
+
 - Creates a client
 - Fetches the thread list for the "/po/" board
 - Updates the thread list
 - Prints the thread number of the first thread
 
 ### 4. Archive Example (`archive.rs`)
-Demonstrates accessing the archived threads for a board.
+
 - Creates a client
 - Fetches the archive for the "/po/" board
 - Updates the archive
