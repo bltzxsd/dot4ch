@@ -36,6 +36,13 @@ This directory contains example implementations demonstrating various features o
 - Updates the archive
 - Prints the oldest archived thread
 
+
+## 5. Boards Example
+
+ - Creates a client
+ - Fetches the boards on the imageboard
+ - Prints the first board's name
+
 ## Running Examples
 
 To run an example, use:
