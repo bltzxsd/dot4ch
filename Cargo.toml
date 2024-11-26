@@ -17,4 +17,4 @@ serde =   { version = "^1.0.210", features = ["derive"] }
 tokio =   { version = "^1.40.0",  features = ["time", "sync"] }
 
 [dev-dependencies]
-tokio =   { version = "^1.40.0",  features = ["rt-multi-thread", "macros"]}
+tokio =   { version = "^1.40.0",  features = ["rt-multi-thread", "macros"] }
