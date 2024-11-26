@@ -19,8 +19,9 @@ Examples can be found in the examples directory.
 
 You can run any example with
 
+```
 $ cargo run --example <example name>
-
+```
 
 ## MSRV
 
