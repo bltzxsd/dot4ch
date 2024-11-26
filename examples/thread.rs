@@ -1,5 +1,3 @@
-//! Example demonstrating how to fetch and interact with a specific thread using dot4ch
-//!
 //! This example shows:
 //! - Creating a dot4ch client
 //! - Fetching a specific thread from the /po/ board

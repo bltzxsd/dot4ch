@@ -1,5 +1,3 @@
-//! Example demonstrating how to fetch and interact with a board's archived threads using dot4ch
-//!
 //! This example shows:
 //! - Creating a dot4ch client
 //! - Fetching the archive for a board

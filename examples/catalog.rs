@@ -1,5 +1,3 @@
-//! Example demonstrating how to fetch and interact with a board's catalog using dot4ch
-//!
 //! This example shows:
 //! - Creating a dot4ch client
 //! - Fetching the catalog for a board
