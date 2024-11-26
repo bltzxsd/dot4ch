@@ -25,3 +25,8 @@ path = "thread.rs"
 [[example]]
 name = "archive"
 path = "archive.rs"
+
+
+[[example]]
+name = "threadlist"
+path = "threadlist.rs"
