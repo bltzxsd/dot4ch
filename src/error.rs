@@ -3,6 +3,7 @@ use std::error::Error as StdError;
 use std::fmt;
 use tokio::sync::AcquireError;
 
+/// Represents the different types of errors that can occur while using the `Client` or its associated operations.
 #[derive(Debug)]
 pub enum Error {
     /// Reqwest Errors

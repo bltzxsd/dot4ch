@@ -93,6 +93,7 @@ impl Page {
     }
 }
 
+/// Contains the attributes of a post in a catalog.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CatPost {
     /// The numeric post ID

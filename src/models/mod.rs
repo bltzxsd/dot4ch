@@ -1,7 +1,23 @@
+/// Contains bindings to imageboard's native [`Archive`].
+///
+/// [`Archive`]: crate::models::archive::Archive
 pub mod archive;
+///
+/// Contains bidnings to list of [`Board`]s and their attributes.
+///
+/// [`Board`]: crate::models::board::Board
 pub mod board;
+/// Contains bindings for imageboard's native [`Catalog`]
+///
+/// [`Catalog`]: crate::models::catalog::Catalog
 pub mod catalog;
+/// Contains bindings for specific [`Thread`]s
+///
+/// [`Thread`]: crate::models::thread::Thread
 pub mod thread;
+/// Contains bindings for threads + their attributes in a [`ThreadList`]
+///
+/// [`ThreadList`]: crate::models::threadlist::ThreadList
 pub mod threadlist;
 
 #[derive(Debug, Clone, Default)]

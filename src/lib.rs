@@ -1,4 +1,5 @@
 #![deny(clippy::all, clippy::pedantic)]
+#![deny(missing_docs)]
 #![allow(clippy::must_use_candidate)]
 //! # dot4ch
 //!
@@ -41,10 +42,17 @@
 //! [`Catalog`]: crate::models::catalog::Catalog
 //! [`Board`]:   crate::models::board::Board
 
+/// Client module contains [`Client`] for requesting and updating data.
 pub mod client;
+
+/// Contains [`Error`]s that can be thrown by the libary.
+///
+/// [`Error`]: crate::error::Error
 pub mod error;
+
 pub(crate) mod models;
-pub mod result;
+
+pub(crate) mod result;
 
 pub use client::Client;
 pub use models::*;

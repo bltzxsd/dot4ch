@@ -12,9 +12,24 @@ use tokio::{
     time::interval,
 };
 
+/// Represents a client to perform HTTP requests with rate limiting.
+///
+/// The `Client` structure wraps an asynchronous HTTP client (`ReqwestClient`) and implements
+/// rate limiting at 1 req/sec via a semaphore.
+///
+/// ## Rate Limiting
+///
+/// By default, the rate limiter provides one permit per second. If more requests are made
+/// than allowed, the client will await until a permit becomes available before proceeding.
+///
+/// ## Note
+///
+/// `Client` supports the `Default` trait, so you can create a new instance with `Client::default()`.
 #[derive(Debug)]
 pub struct Client {
+    /// Holds the reqwest client for accessing API
     http: ReqwestClient,
+    /// Contains global rate limiter.
     limiter: RateLimit,
 }
 
@@ -31,6 +46,14 @@ impl RateLimit {
 }
 
 impl Client {
+    /// Creates a new instance of `Client`.
+    ///
+    /// This function initializes the HTTP client and configures the rate-limiting logic.
+    ///
+    /// # Internals
+    ///
+    /// This function spawns a background task to add permits to the semaphore at rate of
+    /// +1 permit per second
     pub fn new() -> Client {
         let http = ReqwestClient::new();
 
