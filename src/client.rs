@@ -33,18 +33,6 @@ pub struct Client {
     limiter: RateLimit,
 }
 
-#[derive(Debug)]
-pub(crate) struct RateLimit {
-    pub(crate) permit: Arc<Semaphore>,
-    pub(crate) replenisher: JoinHandle<()>,
-}
-
-impl RateLimit {
-    pub async fn acquire(&self) -> Result<SemaphorePermit> {
-        self.permit.acquire().await.map_err(Into::into)
-    }
-}
-
 impl Client {
     /// Creates a new instance of `Client`.
     ///
@@ -56,26 +44,7 @@ impl Client {
     /// +1 permit per second
     pub fn new() -> Client {
         let http = ReqwestClient::new();
-
-        let permit = Arc::new(Semaphore::new(0));
-        let clone = permit.clone();
-
-        let replenisher = tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(1));
-            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-            loop {
-                interval.tick().await;
-                if clone.available_permits() == 0 {
-                    clone.add_permits(1);
-                }
-            }
-        });
-
-        let limiter = RateLimit {
-            permit,
-            replenisher,
-        };
-
+        let limiter = RateLimit::new(0, 1, 1);
         Client { http, limiter }
     }
 
@@ -123,12 +92,6 @@ impl Client {
     }
 }
 
-impl Drop for RateLimit {
-    fn drop(&mut self) {
-        self.replenisher.abort();
-    }
-}
-
 impl Default for Client {
     fn default() -> Self {
         Self::new()
@@ -146,5 +109,45 @@ impl<T: Serialize + for<'a> Deserialize<'a>> Deref for Reply<T> {
 
     fn deref(&self) -> &Self::Target {
         &self.inner
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct RateLimit {
+    pub(crate) permit: Arc<Semaphore>,
+    pub(crate) replenisher: JoinHandle<()>,
+}
+
+impl Drop for RateLimit {
+    fn drop(&mut self) {
+        self.replenisher.abort();
+    }
+}
+
+impl RateLimit {
+    pub(crate) fn new(initial_permits: usize, limit: usize, refill_rate: u64) -> Self {
+        let permit = Arc::new(Semaphore::new(initial_permits));
+
+        let clone = permit.clone();
+
+        let replenisher = tokio::spawn(async move {
+            let mut interval = interval(Duration::from_secs(refill_rate));
+
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+            loop {
+                interval.tick().await;
+                if clone.available_permits() <= limit {
+                    clone.add_permits(1);
+                }
+            }
+        });
+        Self {
+            permit,
+            replenisher,
+        }
+    }
+
+    pub(crate) async fn acquire(&self) -> Result<SemaphorePermit> {
+        self.permit.acquire().await.map_err(Into::into)
     }
 }
