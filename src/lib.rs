@@ -13,6 +13,7 @@
 //! While respecting:
 //! - 1 second-per-request rate-limits.
 //! - `If-Modified-Since` headers with update requests.
+//! - 10 seconds per thread update rate limits.
 //!
 //! ## Example: Printing the comment from a thread.
 //!
