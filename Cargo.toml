@@ -1,7 +1,7 @@
 [package]
 name = "dot4ch"
-version = "4.0.1"
-authors = ["dot4ch-team"]
+version = "4.0.2"
+authors = ["dot4ch"]
 edition = "2021"
 description = "Wrapper library around 4chan API"
 license = "GPL-3.0"
