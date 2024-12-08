@@ -12,6 +12,7 @@ While respecting:
 
 - GET 1 second-per-request cooldown.
 - `If-Modified-Since` headers with update requests.
+- 10 seconds per thread update rate limits.
 
 ## Getting Started
 
@@ -19,8 +20,8 @@ Examples can be found in the examples directory.
 
 You can run any example with
 
-```
-$ cargo run --example <example name>
+```text
+cargo run --example <example name>
 ```
 
 ## MSRV
