@@ -54,7 +54,6 @@ impl Archive {
     /// # Errors
     ///
     /// Will return an error if fetching fails or if necessary data is missing.
-    // impl_update!(Vec<u32>, "field");
     pub async fn update(&mut self, client: &Client) -> Result<()> {
         let reply: Reply<Vec<u32>> = client
             .fetch_json(self.metadata.url(), Some(&self.metadata.last_modified))
