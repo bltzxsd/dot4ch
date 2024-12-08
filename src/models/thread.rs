@@ -1,12 +1,16 @@
+use std::time::Duration;
+
 use crate::{
     client::Reply,
     error::Error::{self, MissingHeader},
-    models::{macros::str_opt_ref, maybe_de_bool, Metadata},
+    models::maybe_de_bool,
+    models::{macros::str_opt_ref, Metadata},
     result::Result,
     Client,
 };
 use reqwest::header::LAST_MODIFIED;
 use serde::{Deserialize, Serialize};
+use tokio::time::Instant;
 
 /// A collection of [`Post`]s representing a 4chan thread.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -14,6 +18,8 @@ pub struct Thread {
     posts: Vec<Post>,
     #[serde(skip)]
     pub(crate) metadata: Metadata,
+    #[serde(skip)]
+    last_update: Option<Instant>,
 }
 
 impl Thread {
@@ -42,14 +48,32 @@ impl Thread {
     /// This method updates the thread and associated metadata.
     /// Using this method will overwrite the currently held data.
     ///
+    /// # Rate Limits
+    ///
+    /// All threads have a separate rate limit of 10 seconds per update
+    /// in addition to global rate limits.
+    /// This rate limit is unique to each thread and will cause the task
+    /// to sleep if called too frequently.
+    ///
     /// # Errors
     ///
     /// This function will return an error if the client fails to fetch
     /// the updated data.
     pub async fn update(&mut self, client: &Client) -> Result<()> {
+        if let Some(last_update) = self.last_update {
+            let elapsed = last_update.elapsed();
+            if elapsed < Duration::from_secs(10) {
+                log::debug!("updating too often! rate-limiting..");
+                let wait_time = Duration::from_secs(10) - elapsed;
+                tokio::time::sleep(wait_time).await;
+            }
+        }
+
         let reply: Reply<Thread> = client
             .fetch_json(self.metadata.url(), Some(&self.metadata.last_modified))
             .await?;
+
+        self.last_update = Some(Instant::now());
 
         match reply.inner {
             Ok(i) => self.posts = i.posts,
