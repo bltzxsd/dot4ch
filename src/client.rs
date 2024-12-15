@@ -76,7 +76,7 @@ impl Client {
         // reduce the permit count
         permit.forget();
 
-        log::info!("response: {:#?}", &response);
+        log::trace!("response: {:#?}", &response);
         log::info!("response status: {}", &response.status());
 
         let inner = match response.status() {
